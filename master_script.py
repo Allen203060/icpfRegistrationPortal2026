@@ -13,7 +13,7 @@ def run_script(script_name):
 
 def main():
     # List of scripts to run in order
-    scripts = ["script_groups.py", "script_rooms.py", "script_final.py", "script_cards.py"]
+    scripts = ["script_groups.py", "script_rooms.py", "script_final.py", "script_card.py"]
 
     # Run each script sequentially
     for script in scripts:
