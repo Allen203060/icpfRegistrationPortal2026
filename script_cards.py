@@ -51,15 +51,15 @@ def create_id_card(c, name, church_or_location, group_name, room_name, x, y):
     conditional_wrap_text(c, name, max_text_width, x + 25 * mm, y_name, max_chars=20)
 
     c.setFont("Helvetica", 10)
-    y_church = y + 30 * mm
-    c.drawString(x + 5 * mm, y_church, "Church:")
-    conditional_wrap_text(c, church_or_location, max_text_width, x + 25 * mm, y_church, max_chars=20)
+    y_church = y + 10 * mm
+    c.drawString(x + 5 * mm, y_church, "Church/Location:")
+    conditional_wrap_text(c, church_or_location, max_text_width, x + 33 * mm, y_church, max_chars=20)
 
     y_group = y + 20 * mm
     c.drawString(x + 5 * mm, y_group, "Group:")
     conditional_wrap_text(c, group_name, max_text_width, x + 25 * mm, y_group, max_chars=20)
 
-    y_room = y + 10 * mm
+    y_room = y + 30 * mm
     c.drawString(x + 5 * mm, y_room, "Room:")
     conditional_wrap_text(c, room_name, max_text_width, x + 25 * mm, y_room, max_chars=20)
 
@@ -82,7 +82,7 @@ def create_id_cards_for_group(group_df, group_name, room_mapping):
     for _, row in group_df.iterrows():
         name = row.get("Name", "N/A")
         # Check if Church is present; if not, use Location
-        church_or_location = row.get("Church", row.get("Location", "N/A"))
+        church_or_location = row["Church"] if pd.notna(row.get("Church")) else row.get("Location", "N/A")
         room_name = room_mapping.get(row.get("S. No."), "N/A")
         
         x, y = positions[card_count % 6]
@@ -117,4 +117,5 @@ def main():
         create_id_cards_for_group(group_df, group_name, room_mapping)
 
 # Run the main function
-main()
+if __name__ == "__main__":
+    main()
