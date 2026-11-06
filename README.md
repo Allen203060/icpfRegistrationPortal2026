@@ -117,6 +117,16 @@ The allocation engine evaluates candidate teams deterministically using a 4-tier
 3. **Admin Override Modal:**
    - Change assigned group or assigned room with real-time bed capacity validations and dorm gender checks.
 
+### 📱 Mobile Desk Use
+
+The portal is designed to be run from phones at the registration counter:
+
+- **Bottom navigation** (Desk / Lookup / Insights) replaces the top tab bar below 768px; the top bar keeps only the camp title, refresh, and day/night toggle so it always fits.
+- **Attendee Lookup** switches from a table to thumb-friendly cards below 768px, with Quick Edit and Override buttons sized for touch.
+- The **Quick Edit** payment/notes modal scrolls within the viewport (`max-h-[92dvh]`) and its fields stack on narrow screens, so Save is always reachable with the keyboard open.
+- The decorative Three.js background is disabled on phones (<768px) to save battery and GPU at a busy desk; form fields stay at 16px so iOS Safari never auto-zooms on focus, and pinch zoom is allowed.
+- If a single row ever overflows, the page itself never scrolls sideways (`overflow-x: clip`); wide tables scroll inside their own container.
+
 ---
 
 ## 💰 Financial & Payment Accounting

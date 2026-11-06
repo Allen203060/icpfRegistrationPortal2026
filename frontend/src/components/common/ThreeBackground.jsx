@@ -15,6 +15,11 @@ export default function ThreeBackground({ darkMode = true }) {
     const container = mountRef.current;
     if (!container) return;
 
+    // Phones at a busy registration desk don't need a live WebGL scene:
+    // it costs GPU and battery for a purely decorative background. The
+    // CSS background and cards still render; tablets/desktops keep it.
+    if (window.innerWidth < 768) return;
+
     // Check user preference for reduced motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -44,7 +49,7 @@ export default function ThreeBackground({ darkMode = true }) {
       alpha: true,
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
     // Transparent canvas so CSS background & cards show through seamlessly
     renderer.setClearColor(0x000000, 0);
@@ -125,7 +130,7 @@ export default function ThreeBackground({ darkMode = true }) {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });

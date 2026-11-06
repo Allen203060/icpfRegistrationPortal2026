@@ -92,7 +92,7 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
         <button
           type="button"
           onClick={onClose}
-          className="btn-press absolute top-5 right-5 p-1 rounded-lg text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost hover:bg-slateElevated/15 dark:hover:bg-slateElevated transition-colors cursor-pointer"
+          className="btn-press absolute top-5 right-5 p-2 rounded-lg text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost hover:bg-slateElevated/15 dark:hover:bg-slateElevated transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -281,13 +281,13 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated text-xs font-semibold text-slateSteel dark:text-slateMuted hover:bg-slateElevated/15 dark:hover:bg-slateElevated/40 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-slateMuted/30 dark:border-slateElevated text-xs font-semibold text-slateSteel dark:text-slateMuted hover:bg-slateElevated/15 dark:hover:bg-slateElevated/40 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-bold hover:bg-sky-500 flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-sky-600 text-white text-xs font-bold hover:bg-sky-500 flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
             >
               <Save className="w-3.5 h-3.5" />
               Save Override & Notes

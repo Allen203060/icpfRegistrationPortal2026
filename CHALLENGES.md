@@ -126,5 +126,21 @@ This journal tracks architectural hurdles, trade-offs, bugs, and key engineering
   3. Validated with high-throughput load testing (`backend/tests/loadTest.js`), achieving 100% success rate across 80 simultaneous registrations at 25.4 RPS with zero duplicate key exceptions.
 - **Key Takeaway (Interview Insight):** *Atomic In-Engine Sequencing vs Application-Level Reads*: In concurrent databases, never calculate sequential IDs by querying the target table at the application layer. Delegating sequence increments to atomic engine primitives (`$inc` in MongoDB or `SEQUENCE` in SQL) eliminates race windows entirely.
 
+---
+
+### Challenge 14: Mobile Desk Breakage — Header Overflow, Global 16px Button Rule & Unscrollable Modals
+- **The Problem:** On phones (360px wide) the registration desk was unusable the day before camp: the top header (brand + 3 nav tabs + refresh + day/night switcher) measured ~490px and forced page-level horizontal scroll; every `text-xs` button in the app rendered at 16px; and the Lookup quick-edit modal had no height cap, so its Save button could sit below the fold with the keyboard open.
+- **Root Cause:** (1) The header laid out all controls in one row with no mobile breakpoint, even though the fixed bottom nav already duplicates the three tabs. (2) `index.css` applied `font-size: 16px !important` to `input, select, textarea, button` to stop iOS auto-zoom — but the rule only needs to cover form controls; on buttons it overrode every designed size. (3) The quick-edit modal panel had no `max-h`/`overflow-y-auto`, unlike the Override and team-roster modals which already had it. (4) The admin `ParticipantTable` rendered a 7-column table with horizontal scroll only, and had no dark-mode classes at all.
+- **Solution:**
+  1. Top tab group hidden below `md` (bottom nav covers it); brand subtitle hidden below `sm`; title truncates instead of pushing controls off-screen.
+  2. Scoped the 16px rule to `input, select, textarea` only; added `overflow-x: clip` on `html`/`body` as a safety net so one overflowing row can never create page-level sideways scroll.
+  3. Quick-edit modal: `max-h-[92dvh] overflow-y-auto overscroll-contain`, its two-column grids stack below `sm`, close/action targets raised to ≥40px.
+  4. `ParticipantTable`: mobile card list below `md` (same pattern as `AttendeeLookup`), desktop table from `md` up, full dark-mode palette.
+  5. `ThreeBackground`: no WebGL scene below 768px width (decorative only; saves GPU/battery at a busy desk); device-pixel-ratio cap lowered 2 → 1.5.
+  6. Viewport meta now allows pinch zoom (`maximum-scale=1.0, user-scalable=no` removed).
+- **Verification:** Production build passes (`vite build`, 5.34s). A live phone-viewport check was started but not completed (user asked for the file instead) — verify on a real phone before the event.
+- **Key Takeaway (Interview Insight):** *Scope Global Resets to Their Actual Target*: A well-intentioned global rule (16px to stop iOS zoom) silently restyled every button in the app. Resets must name exactly the elements they protect — and any screen the desk team will hold in one hand deserves a real-device viewport check, not a desktop resize.
+
+
 
 
