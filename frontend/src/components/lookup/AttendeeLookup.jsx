@@ -223,7 +223,7 @@ export default function AttendeeLookup({
                 href={getExportUrl('excel')}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-press flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                className="btn-press flex items-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
                 title="Download complete attendees Excel spreadsheet"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -234,7 +234,7 @@ export default function AttendeeLookup({
                 href={getExportUrl('id-cards')}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-press flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 transition-colors"
+                className="btn-press flex items-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 transition-colors"
                 title="Download 6-up printable ID badges PDF"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -245,7 +245,7 @@ export default function AttendeeLookup({
                 href={getExportUrl('room-lists')}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-press flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                className="btn-press flex items-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
                 title="Download room occupancy roster PDF"
               >
                 <BedDouble className="w-3.5 h-3.5" />
@@ -388,7 +388,7 @@ export default function AttendeeLookup({
                       <button
                         type="button"
                         onClick={() => openQuickEdit(camper)}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold min-h-[32px] ${
                           isPaid
                             ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                             : camper.paymentStatus === 'Waiting Payment'
@@ -413,7 +413,7 @@ export default function AttendeeLookup({
                     <button
                       type="button"
                       onClick={() => openQuickEdit(camper)}
-                      className="btn-press px-2.5 py-1 rounded-lg bg-slateElevated/10 dark:bg-slateElevated text-[11px] font-semibold text-slateVoid dark:text-slateFrost flex items-center gap-1"
+                      className="btn-press px-3 py-2 rounded-lg bg-slateElevated/10 dark:bg-slateElevated text-[11px] font-semibold text-slateVoid dark:text-slateFrost flex items-center gap-1"
                     >
                       <Wallet className="w-3 h-3" /> Quick Edit
                     </button>
@@ -421,7 +421,7 @@ export default function AttendeeLookup({
                       <button
                         type="button"
                         onClick={() => onUpdateParticipant(camper)}
-                        className="btn-press px-2.5 py-1 rounded-lg bg-slateElevated/10 dark:bg-slateElevated text-[11px] font-semibold text-slateVoid dark:text-slateFrost flex items-center gap-1"
+                        className="btn-press px-3 py-2 rounded-lg bg-slateElevated/10 dark:bg-slateElevated text-[11px] font-semibold text-slateVoid dark:text-slateFrost flex items-center gap-1"
                       >
                         <Edit2 className="w-3 h-3" /> Override
                       </button>
@@ -629,11 +629,11 @@ export default function AttendeeLookup({
       {/* QUICK INLINE PAYMENT & NOTES EDIT MODAL */}
       {quickEditCamper && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slateVoid/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slateMidnight rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slateMuted/30 dark:border-slateElevated relative animate-in zoom-in-95 duration-150 transition-all">
+          <div className="bg-white dark:bg-slateMidnight rounded-2xl max-w-md w-full max-h-[92dvh] overflow-y-auto overscroll-contain p-6 shadow-2xl border border-slateMuted/30 dark:border-slateElevated relative animate-in zoom-in-95 duration-150 transition-all">
             <button
               type="button"
               onClick={() => setQuickEditCamper(null)}
-              className="btn-press absolute top-5 right-5 p-1 rounded-lg text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost hover:bg-slateElevated/15 dark:hover:bg-slateElevated transition-colors cursor-pointer"
+              className="btn-press absolute top-5 right-5 p-2 rounded-lg text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost hover:bg-slateElevated/15 dark:hover:bg-slateElevated transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -655,8 +655,9 @@ export default function AttendeeLookup({
             </div>
 
             <form onSubmit={handleSaveQuick} className="space-y-4">
-              {/* Payment Status & Fee Preset Dropdown */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Payment Status & Fee Preset Dropdown — stacks on phones so
+                  the two selects stay thumb-wide instead of ~150px each */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
                     Payment Status
@@ -692,7 +693,7 @@ export default function AttendeeLookup({
               </div>
 
               {/* Amount Paid & Total Fee / Balance Due */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-slateSteel dark:text-slateMuted block">
                     {quickFeeOption === 'custom' ? 'Custom Fee / Paid (₹)' : 'Amount Paid (₹)'}

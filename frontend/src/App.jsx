@@ -252,22 +252,23 @@ export default function App() {
         <header className="bg-white dark:bg-slateMidnight border-b border-slateMuted/30 dark:border-slateElevated sticky top-0 z-40 transition-colors shadow-subtle">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
             {/* Brand Identity */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-slateElevated text-slateFrost flex items-center justify-center font-black text-sm shadow-subtle border border-slateSteel/30">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+              <div className="w-9 h-9 shrink-0 rounded-xl bg-slateElevated text-slateFrost flex items-center justify-center font-black text-sm shadow-subtle border border-slateSteel/30">
                 IC
               </div>
-              <div>
-                <h1 className="text-sm font-bold tracking-tight text-slateVoid dark:text-slateFrost leading-none">
+              <div className="min-w-0">
+                <h1 className="truncate text-sm font-bold tracking-tight text-slateVoid dark:text-slateFrost leading-none">
                   {campConfig?.campTitle || 'ICPF Camp 2026'}
                 </h1>
-                <span className="text-[11px] font-medium text-slateSteel dark:text-slateMuted">
+                <span className="hidden sm:block text-[11px] font-medium text-slateSteel dark:text-slateMuted">
                   Registration & 4-Tier Allocator
                 </span>
               </div>
             </div>
 
-            {/* Navigation Tabs (Always Visible, Responsive Labels) */}
-            <div className="flex items-center p-1 bg-slateElevated/15 dark:bg-slateElevated/50 rounded-xl border border-slateMuted/30 dark:border-slateElevated shadow-subtle">
+            {/* Navigation Tabs (Desktop only — the fixed bottom nav below
+                covers the same three tabs on phones, so the top bar fits) */}
+            <div className="hidden md:flex items-center p-1 bg-slateElevated/15 dark:bg-slateElevated/50 rounded-xl border border-slateMuted/30 dark:border-slateElevated shadow-subtle">
               <button
                 type="button"
                 onClick={() => setActiveTab('desk')}
@@ -309,11 +310,11 @@ export default function App() {
             </div>
 
             {/* Right Controls: Refresh & Day/Night Switcher */}
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 onClick={fetchLiveParticipants}
-                className="btn-press p-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/70 dark:bg-slateMidnight/70 text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost hover:bg-white dark:hover:bg-slateMidnight transition-colors cursor-pointer"
+                className="btn-press shrink-0 p-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/70 dark:bg-slateMidnight/70 text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost hover:bg-white dark:hover:bg-slateMidnight transition-colors cursor-pointer"
                 title="Refresh live registrations"
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -324,7 +325,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => toggleTheme(false)}
-                  className={`btn-press flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer ${
+                  className={`btn-press flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer ${
                     !darkMode
                       ? 'bg-white text-slateVoid shadow-subtle border border-slateMuted/40'
                       : 'text-slateSteel hover:text-slateVoid dark:text-slateMuted dark:hover:text-slateFrost'
@@ -337,7 +338,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => toggleTheme(true)}
-                  className={`btn-press flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer ${
+                  className={`btn-press flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer ${
                     darkMode
                       ? 'bg-slateElevated text-slateFrost shadow-subtle border border-slateSteel/40'
                       : 'text-slateSteel hover:text-slateVoid dark:text-slateMuted dark:hover:text-slateFrost'
@@ -475,11 +476,11 @@ export default function App() {
       </div>
 
       {/* Mobile-Native Ergonomic Bottom Navigation Bar (Screens < 768px) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slateMidnight/95 backdrop-blur-lg border-t border-slateMuted/30 dark:border-slateElevated px-3 py-2 flex items-center justify-around shadow-lg">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slateMidnight/95 backdrop-blur-lg border-t border-slateMuted/30 dark:border-slateElevated px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-lg">
         <button
           type="button"
           onClick={() => setActiveTab('desk')}
-          className={`btn-press flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all ${
+          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all ${
             activeTab === 'desk'
               ? 'text-sky-600 dark:text-slateFrost bg-slateElevated/15 dark:bg-slateElevated'
               : 'text-slateSteel dark:text-slateMuted'
@@ -492,7 +493,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => setActiveTab('lookup')}
-          className={`btn-press flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all ${
+          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all ${
             activeTab === 'lookup'
               ? 'text-sky-600 dark:text-slateFrost bg-slateElevated/15 dark:bg-slateElevated'
               : 'text-slateSteel dark:text-slateMuted'
@@ -505,7 +506,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => setActiveTab('dashboard')}
-          className={`btn-press flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all ${
+          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all ${
             activeTab === 'dashboard'
               ? 'text-sky-600 dark:text-slateFrost bg-slateElevated/15 dark:bg-slateElevated'
               : 'text-slateSteel dark:text-slateMuted'

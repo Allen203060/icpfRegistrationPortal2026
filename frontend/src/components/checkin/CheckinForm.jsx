@@ -421,7 +421,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
             <button
               type="button"
               onClick={handleNextSingle}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost border border-slateMuted/30 dark:border-slateElevated hover:bg-slateElevated/20 transition-colors shadow-2xs cursor-pointer"
+              className="inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost border border-slateMuted/30 dark:border-slateElevated hover:bg-slateElevated/20 transition-colors shadow-2xs cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               Next Camper
@@ -606,7 +606,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
             <button
               type="button"
               onClick={() => setMode('single')}
-              className={`btn-press flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`btn-press flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 mode === 'single'
                   ? 'bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost shadow-subtle border border-slateMuted/20 dark:border-slateElevated'
                   : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
@@ -618,7 +618,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
             <button
               type="button"
               onClick={() => setMode('group')}
-              className={`btn-press flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`btn-press flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 mode === 'group'
                   ? 'bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost shadow-subtle border border-slateMuted/20 dark:border-slateElevated'
                   : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
@@ -680,7 +680,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                 <button
                   type="button"
                   onClick={() => setSingleForm((p) => ({ ...p, gender: 'Male' }))}
-                  className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`py-2.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                     singleForm.gender === 'Male'
                       ? 'bg-white/90 dark:bg-slateMidnight/90 text-sky-700 dark:text-sky-400 shadow-xs'
                       : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
@@ -691,7 +691,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                 <button
                   type="button"
                   onClick={() => setSingleForm((p) => ({ ...p, gender: 'Female' }))}
-                  className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`py-2.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                     singleForm.gender === 'Female'
                       ? 'bg-white/90 dark:bg-slateMidnight/90 text-rose-700 dark:text-rose-400 shadow-xs'
                       : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
@@ -1180,7 +1180,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                 <button
                   type="button"
                   onClick={addMember}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Add Camper
@@ -1200,7 +1200,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                       <button
                         type="button"
                         onClick={() => removeMember(index)}
-                        className="text-slateSteel dark:text-slateMuted hover:text-rose-500 transition-colors p-1"
+                        className="text-slateSteel dark:text-slateMuted hover:text-rose-500 transition-colors p-2"
                         title="Remove Camper"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1247,7 +1247,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                         <button
                           type="button"
                           onClick={() => handleMemberChange(index, 'gender', 'Male')}
-                          className={`flex-1 py-1.5 text-xs font-semibold ${
+                          className={`flex-1 py-2.5 text-xs font-semibold ${
                             member.gender === 'Male'
                               ? 'bg-sky-600 text-white'
                               : 'bg-white/80 dark:bg-slateMidnight/80 text-slateSteel dark:text-slateMuted'
@@ -1258,7 +1258,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                         <button
                           type="button"
                           onClick={() => handleMemberChange(index, 'gender', 'Female')}
-                          className={`flex-1 py-1.5 text-xs font-semibold ${
+                          className={`flex-1 py-2.5 text-xs font-semibold ${
                             member.gender === 'Female'
                               ? 'bg-rose-600 text-white'
                               : 'bg-white/80 dark:bg-slateMidnight/80 text-slateSteel dark:text-slateMuted'
