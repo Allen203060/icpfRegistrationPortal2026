@@ -45,15 +45,15 @@
     transition: background-color 200ms cubic-bezier(0.23, 1, 0.32, 1), color 200ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  /* Prevent iOS Safari auto-zoom on form fields (16px minimum). Scoped to
-     form controls only: applying this to buttons as well overrode every
-     designed text-xs button in the app and blew out the mobile header. */
-  input, select, textarea {
-    font-size: 16px !important;
-    touch-action: manipulation;
+  /* Prevent iOS Safari auto-zoom on form fields (16px minimum) on touch devices.
+     Scoped behind (pointer: coarse) so desktop mouse users keep designed text-xs/text-sm typography. */
+  @media (pointer: coarse) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
   }
 
-  button {
+  input, select, textarea, button {
     touch-action: manipulation;
   }
 }

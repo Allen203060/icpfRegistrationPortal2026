@@ -103,7 +103,7 @@ export default function ParticipantTable({
           unusable on a phone, so each camper becomes a thumb-friendly card */}
       <div className="block md:hidden divide-y divide-zinc-100 dark:divide-slateElevated/50">
         {filteredParticipants.length === 0 ? (
-          <div className="py-12 text-center text-zinc-400 dark:text-slateMuted dark:text-slateMuted">
+          <div className="py-12 text-center text-zinc-400 dark:text-slateMuted">
             <div className="flex flex-col items-center justify-center gap-2">
               <UserX className="w-8 h-8 stroke-[1.5]" />
               <span className="font-semibold text-zinc-600 dark:text-slateFrost">No matching campers found</span>
@@ -139,8 +139,8 @@ export default function ParticipantTable({
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                       p.gender === 'Male'
-                        ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        ? 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
                     }`}
                   >
                     {p.gender} • {p.age}y
@@ -226,8 +226,8 @@ export default function ParticipantTable({
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           p.gender === 'Male'
-                            ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            ? 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
                         }`}
                       >
                         {p.gender} • {p.age}y
