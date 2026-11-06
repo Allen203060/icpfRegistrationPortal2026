@@ -173,6 +173,13 @@ export default function App() {
     }
   };
 
+  const handleTabChange = (nextTab) => {
+    if (nextTab === activeTab) return;
+    setActiveTab(nextTab);
+    // Smooth reset scroll position so the new page view enters cleanly from the top
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  };
+
   const handleOpenOverride = (camper) => {
     setOverrideTarget(camper);
     setIsOverrideOpen(true);
@@ -271,8 +278,8 @@ export default function App() {
             <div className="hidden md:flex items-center p-1 bg-slateElevated/15 dark:bg-slateElevated/50 rounded-xl border border-slateMuted/30 dark:border-slateElevated shadow-subtle">
               <button
                 type="button"
-                onClick={() => setActiveTab('desk')}
-                className={`btn-press flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
+                onClick={() => handleTabChange('desk')}
+                className={`btn-press flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                   activeTab === 'desk'
                     ? 'bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost shadow-subtle border border-slateMuted/20 dark:border-slateElevated'
                     : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
@@ -284,8 +291,8 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setActiveTab('lookup')}
-                className={`btn-press flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
+                onClick={() => handleTabChange('lookup')}
+                className={`btn-press flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                   activeTab === 'lookup'
                     ? 'bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost shadow-subtle border border-slateMuted/20 dark:border-slateElevated'
                     : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
@@ -297,8 +304,8 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setActiveTab('dashboard')}
-                className={`btn-press flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
+                onClick={() => handleTabChange('dashboard')}
+                className={`btn-press flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                   activeTab === 'dashboard'
                     ? 'bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost shadow-subtle border border-slateMuted/20 dark:border-slateElevated'
                     : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
@@ -379,85 +386,92 @@ export default function App() {
 
         {/* Main View Port */}
         <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-5 sm:py-7">
-          {activeTab === 'desk' && (
-            /* Check-in Desk View */
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
-              {/* Form Column */}
-              <div className="lg:col-span-7">
-                <CheckinForm
-                  onRegistered={handleRegistered}
-                  teamConfigs={campConfig?.teams || []}
-                />
-              </div>
+          <div
+            key={activeTab}
+            id={`tabpanel-${activeTab}`}
+            role="tabpanel"
+            className="page-enter"
+          >
+            {activeTab === 'desk' && (
+              /* Check-in Desk View */
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+                {/* Form Column */}
+                <div className="lg:col-span-7">
+                  <CheckinForm
+                    onRegistered={handleRegistered}
+                    teamConfigs={campConfig?.teams || []}
+                  />
+                </div>
 
-              {/* Latest Shift Registrations Side Column */}
-              <div className="lg:col-span-5 space-y-4">
-                <div className="bg-white/90 dark:bg-slateMidnight/90 backdrop-blur-md rounded-2xl border border-slateMuted/30 dark:border-slateElevated p-5 shadow-card-light dark:shadow-card-dark transition-all">
-                  <div className="flex items-center justify-between pb-3 border-b border-slateMuted/20 dark:border-slateElevated mb-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slateSteel dark:text-slateMuted">
-                      Latest Shift Registrations
-                    </h4>
-                    <span className="text-xs font-mono font-semibold text-slateVoid dark:text-slateFrost">
-                      {participants.length} Total
-                    </span>
-                  </div>
+                {/* Latest Shift Registrations Side Column */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="bg-white/90 dark:bg-slateMidnight/90 backdrop-blur-md rounded-2xl border border-slateMuted/30 dark:border-slateElevated p-5 shadow-card-light dark:shadow-card-dark transition-all">
+                    <div className="flex items-center justify-between pb-3 border-b border-slateMuted/20 dark:border-slateElevated mb-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slateSteel dark:text-slateMuted">
+                        Latest Shift Registrations
+                      </h4>
+                      <span className="text-xs font-mono font-semibold text-slateVoid dark:text-slateFrost">
+                        {participants.length} Total
+                      </span>
+                    </div>
 
-                  <div className="divide-y divide-slateMuted/15 dark:divide-slateElevated max-h-[480px] overflow-y-auto">
-                    {participants.slice(0, 8).map((camper) => {
-                      const color = getTeamColor(camper.assignedTeam);
-                      const textColor = getContrastTextColor(color);
-                      return (
-                        <div
-                          key={camper._id || camper.serialNo}
-                          className="py-3 flex items-center justify-between text-xs px-2.5 rounded-xl hover:bg-slateElevated/10 dark:hover:bg-slateElevated/30 transition-colors"
-                        >
-                          <div className="truncate max-w-[200px]">
-                            <span className="font-bold text-slateVoid dark:text-slateFrost block truncate text-xs sm:text-sm">
-                              {camper.name}
-                            </span>
-                            <span className="text-[10px] text-slateSteel dark:text-slateMuted font-mono">
-                              #{camper.serialNo} • {camper.gender} • {camper.church || 'General'}
-                            </span>
+                    <div className="divide-y divide-slateMuted/15 dark:divide-slateElevated max-h-[480px] overflow-y-auto">
+                      {participants.slice(0, 8).map((camper) => {
+                        const color = getTeamColor(camper.assignedTeam);
+                        const textColor = getContrastTextColor(color);
+                        return (
+                          <div
+                            key={camper._id || camper.serialNo}
+                            className="py-3 flex items-center justify-between text-xs px-2.5 rounded-xl hover:bg-slateElevated/10 dark:hover:bg-slateElevated/30 transition-colors"
+                          >
+                            <div className="truncate max-w-[200px]">
+                              <span className="font-bold text-slateVoid dark:text-slateFrost block truncate text-xs sm:text-sm">
+                                {camper.name}
+                              </span>
+                              <span className="text-[10px] text-slateSteel dark:text-slateMuted font-mono">
+                                #{camper.serialNo} • {camper.gender} • {camper.church || 'General'}
+                              </span>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span
+                                className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold shadow-2xs border border-black/10"
+                                style={{ backgroundColor: color, color: textColor }}
+                              >
+                                {camper.assignedTeam}
+                              </span>
+                              <span className="text-[10px] text-slateSteel dark:text-slateMuted block mt-0.5 font-medium">
+                                {camper.assignedRoom || 'Day Scholar'}
+                              </span>
+                            </div>
                           </div>
-
-                          <div className="text-right shrink-0">
-                            <span
-                              className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold shadow-2xs border border-black/10"
-                              style={{ backgroundColor: color, color: textColor }}
-                            >
-                              {camper.assignedTeam}
-                            </span>
-                            <span className="text-[10px] text-slateSteel dark:text-slateMuted block mt-0.5 font-medium">
-                              {camper.assignedRoom || 'Day Scholar'}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 'lookup' && (
-            /* Dedicated Attendee Lookup Tab */
-            <AttendeeLookup
-              participants={participants}
-              campConfig={campConfig}
-              onUpdateParticipant={handleOpenOverride}
-              onSaveParticipant={handleSaveOverride}
-              onDeleteParticipant={handleDeleteParticipant}
-            />
-          )}
+            {activeTab === 'lookup' && (
+              /* Dedicated Attendee Lookup Tab */
+              <AttendeeLookup
+                participants={participants}
+                campConfig={campConfig}
+                onUpdateParticipant={handleOpenOverride}
+                onSaveParticipant={handleSaveOverride}
+                onDeleteParticipant={handleDeleteParticipant}
+              />
+            )}
 
-          {activeTab === 'dashboard' && (
-            /* Live Insights & Analytics View */
-            <DashboardStats
-              participants={participants}
-              campConfig={campConfig}
-            />
-          )}
+            {activeTab === 'dashboard' && (
+              /* Live Insights & Analytics View */
+              <DashboardStats
+                participants={participants}
+                campConfig={campConfig}
+              />
+            )}
+          </div>
         </main>
 
         {/* Supervisor Manual Override Modal */}
@@ -479,8 +493,8 @@ export default function App() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slateMidnight/95 backdrop-blur-lg border-t border-slateMuted/30 dark:border-slateElevated px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-lg">
         <button
           type="button"
-          onClick={() => setActiveTab('desk')}
-          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all ${
+          onClick={() => handleTabChange('desk')}
+          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all duration-200 ${
             activeTab === 'desk'
               ? 'text-sky-600 dark:text-slateFrost bg-slateElevated/15 dark:bg-slateElevated'
               : 'text-slateSteel dark:text-slateMuted'
@@ -492,8 +506,8 @@ export default function App() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('lookup')}
-          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all ${
+          onClick={() => handleTabChange('lookup')}
+          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all duration-200 ${
             activeTab === 'lookup'
               ? 'text-sky-600 dark:text-slateFrost bg-slateElevated/15 dark:bg-slateElevated'
               : 'text-slateSteel dark:text-slateMuted'
@@ -505,8 +519,8 @@ export default function App() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('dashboard')}
-          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all ${
+          onClick={() => handleTabChange('dashboard')}
+          className={`btn-press flex flex-col items-center gap-1 py-2 px-4 min-w-[64px] rounded-xl text-[10px] font-bold transition-all duration-200 ${
             activeTab === 'dashboard'
               ? 'text-sky-600 dark:text-slateFrost bg-slateElevated/15 dark:bg-slateElevated'
               : 'text-slateSteel dark:text-slateMuted'

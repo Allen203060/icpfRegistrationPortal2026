@@ -634,7 +634,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
         {/* MODE 1: SINGLE CAMPER REGISTRATION FORM              */}
         {/* ==================================================== */}
         {mode === 'single' && (
-          <form onSubmit={handleSingleSubmit} className="space-y-4">
+          <form onSubmit={handleSingleSubmit} className="space-y-4 page-enter">
             {/* Full Name & Age */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="md:col-span-2 space-y-1">
@@ -932,7 +932,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
         {/* MODE 2: GROUP / FAMILY REGISTRATION FORM            */}
         {/* ==================================================== */}
         {mode === 'group' && (
-          <form onSubmit={handleGroupSubmit} className="space-y-5">
+          <form onSubmit={handleGroupSubmit} className="space-y-5 page-enter">
             {/* Responsible Person / Pastor Card */}
             <div className="p-4 rounded-xl bg-sky-500/5 dark:bg-sky-500/10 border border-sky-500/20 space-y-3">
               <span className="text-xs font-bold text-sky-800 dark:text-sky-300 uppercase tracking-wider block">

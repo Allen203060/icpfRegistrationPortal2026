@@ -775,8 +775,8 @@ export default function DashboardStats({ participants = [], campConfig = null })
 
       {/* 7. Team Roster Detail Modal */}
       {selectedTeamModal && activeModalTeam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slateVoid/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slateMidnight rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slateMuted/30 dark:border-slateElevated overflow-hidden animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slateVoid/80 backdrop-blur-sm modal-backdrop-enter">
+          <div className="bg-white dark:bg-slateMidnight rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slateMuted/30 dark:border-slateElevated overflow-hidden modal-dialog-enter">
             {/* Modal Header */}
             <div
               className="p-4 sm:p-5 flex items-center justify-between border-b border-black/10 dark:border-white/10"

@@ -87,8 +87,8 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slateVoid/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slateMidnight rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-slateMuted/30 dark:border-slateElevated relative animate-in zoom-in-95 duration-150 transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slateVoid/80 backdrop-blur-sm modal-backdrop-enter">
+      <div className="bg-white dark:bg-slateMidnight rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-slateMuted/30 dark:border-slateElevated relative modal-dialog-enter">
         <button
           type="button"
           onClick={onClose}

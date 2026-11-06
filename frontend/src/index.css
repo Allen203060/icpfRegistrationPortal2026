@@ -90,6 +90,70 @@
   background: rgba(155, 168, 171, 0.7);
 }
 
+/* ==========================================================================
+   Page & Modal Micro-Transitions (Emil Kowalski Motion Philosophy)
+   - Duration: Strictly <250ms (fast, snappy, zero perceptible lag)
+   - Easing: cubic-bezier(0.23, 1, 0.32, 1) (strong ease-out)
+   - Properties: Transform & Opacity only (hardware accelerated, no layout reflows)
+   - Accessibility: prefers-reduced-motion drops motion, preserves instant visibility
+   ========================================================================== */
+
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  will-change: opacity, transform;
+}
+
+@keyframes modalBackdropEnter {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.modal-backdrop-enter {
+  animation: modalBackdropEnter 180ms ease-out both;
+}
+
+@keyframes modalDialogEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-dialog-enter {
+  animation: modalDialogEnter 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  will-change: opacity, transform;
+}
+
+/* Reduced Motion Override for Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .modal-backdrop-enter,
+  .modal-dialog-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* Print Styles for Physical ID Badge (Exact 85mm x 54mm Standard Card) */
 @media print {
   body {
