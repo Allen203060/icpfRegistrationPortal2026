@@ -1,0 +1,18 @@
+{
+  "name": "icpf-camp-registration-2026",
+  "private": true,
+  "description": "ICPF Camp Registration & Management System (2026 MERN Edition)",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "build": "npm --prefix frontend run build",
+    "dev:backend": "npm --prefix backend run dev",
+    "start:backend": "npm --prefix backend start",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "test": "node backend/verifyCore.js && node backend/tests/allocator.test.js && node backend/tests/api.test.js && node backend/tests/export.test.js",
+    "test:allocator": "node backend/tests/allocator.test.js",
+    "test:api": "node backend/tests/api.test.js",
+    "test:export": "node backend/tests/export.test.js",
+    "test:load": "node backend/tests/loadTest.js"
+  }
+}

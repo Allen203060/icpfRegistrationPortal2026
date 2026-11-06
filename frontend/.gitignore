@@ -1,0 +1,20 @@
+# Node dependencies
+node_modules/
+
+# Production build artifacts
+dist/
+dist-ssr/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# System
+.DS_Store

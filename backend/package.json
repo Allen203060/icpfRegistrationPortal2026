@@ -1,0 +1,30 @@
+{
+  "name": "icpf-camp-backend",
+  "version": "1.0.0",
+  "description": "ICPF Camp Registration & Management System (2026 MERN Edition) - Backend API & Services",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node verifyCore.js"
+  },
+  "keywords": [
+    "icpf",
+    "camp-management",
+    "registration",
+    "mern",
+    "express",
+    "mongoose"
+  ],
+  "author": "ICPF Camp Systems Team",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "mongoose": "^8.10.1",
+    "multer": "^2.5.0",
+    "pdfkit": "^0.20.2"
+  }
+}

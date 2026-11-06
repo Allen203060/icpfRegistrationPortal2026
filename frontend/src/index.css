@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-void: #CCD0CF;
+    --bg-surface: #FFFFFF;
+    --bg-surface-elevated: #F2F5F5;
+    --border-subtle: rgba(155, 168, 171, 0.4);
+    --border-strong: #9BA8AB;
+    --text-primary: #06141B;
+    --text-secondary: #253745;
+    --text-muted: #4A5C6A;
+    --accent-steel: #4A5C6A;
+  }
+
+  .dark {
+    --bg-void: #06141B;
+    --bg-surface: #11212D;
+    --bg-surface-elevated: #253745;
+    --border-subtle: rgba(74, 92, 106, 0.35);
+    --border-strong: #4A5C6A;
+    --text-primary: #CCD0CF;
+    --text-secondary: #9BA8AB;
+    --text-muted: #4A5C6A;
+    --accent-steel: #9BA8AB;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-void);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 200ms cubic-bezier(0.23, 1, 0.32, 1), color 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* Prevent iOS Safari 300ms tap delay and auto zoom */
+  input, select, textarea, button {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+}
+
+/* Micro-interactions & Polish (Emil Kowalski Philosophy) */
+.btn-press {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease, border-color 160ms ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Hover guarded behind fine pointer for mobile native experience */
+@media (hover: hover) and (pointer: fine) {
+  .interactive-hover:hover {
+    transform: translateY(-1px);
+    transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(74, 92, 106, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(155, 168, 171, 0.7);
+}
+
+/* Print Styles for Physical ID Badge (Exact 85mm x 54mm Standard Card) */
+@media print {
+  body {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .no-print, canvas {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  .badge-card-print {
+    width: 85mm !important;
+    height: 54mm !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border: 1px solid #18181b !important;
+    border-radius: 4mm !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
