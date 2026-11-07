@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node verifyCore.js"
+    "test": "node verifyCore.js",
+    "test:load": "node tests/loadTest.js",
+    "db:clean": "node scripts/cleanDatabase.js"
   },
   "keywords": [
     "icpf",

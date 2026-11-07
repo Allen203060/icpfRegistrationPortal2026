@@ -9,6 +9,7 @@
  */
 
 const http = require('http');
+const https = require('https');
 const { performance } = require('perf_hooks');
 const { startServer, stopServer } = require('../server');
 const { allocateParticipant } = require('../services/allocatorService');
@@ -23,7 +24,8 @@ function getArg(flag, defaultValue) {
 
 const TOTAL_REQUESTS = parseInt(getArg('--total', '100'), 10);
 const TARGET_RPS = parseInt(getArg('--rate', '25'), 10); // 25 requests per second burst
-const BASE_URL = getArg('--url', 'http://localhost:5000');
+const BASE_URL = getArg('--url', 'http://localhost:5000').replace(/\/+$/, '');
+const SIMULATE_UNPAID = args.includes('--unpaid');
 
 // Realistic Google Form Dataset (Matching https://forms.gle/bsD3DK5KDs9Lswag9)
 const FIRST_NAMES = [
@@ -63,10 +65,10 @@ function generateCamper(i) {
     staying: isStaying,
     phone: `+91 984${Math.floor(1000000 + Math.random() * 9000000)}`,
     notes: `${isStudent ? 'Student' : 'Working'} • First Timer: ${isFirstTimer ? 'Yes' : 'No'}`,
-    paymentStatus: 'Paid Online',
+    paymentStatus: SIMULATE_UNPAID ? 'Waiting Payment' : 'Paid Online',
     feeTotal: isStaying ? 500 : 400,
-    amountPaid: isStaying ? 500 : 400,
-    balanceDue: 0
+    amountPaid: SIMULATE_UNPAID ? 0 : (isStaying ? 500 : 400),
+    balanceDue: SIMULATE_UNPAID ? (isStaying ? 500 : 400) : 0
   };
 }
 
@@ -74,16 +76,17 @@ function sendGetRequest(url) {
   return new Promise((resolve) => {
     try {
       const parsedUrl = new URL(url);
-      const req = http.get(parsedUrl, (res) => {
+      const client = parsedUrl.protocol === 'https:' ? https : http;
+      const req = client.get(parsedUrl, (res) => {
         resolve({ statusCode: res.statusCode, success: res.statusCode === 200 });
       });
-      req.on('error', () => resolve({ statusCode: 0, success: false }));
-      req.setTimeout(1500, () => {
+      req.on('error', (err) => resolve({ statusCode: 0, success: false, error: err.message }));
+      req.setTimeout(5000, () => {
         req.destroy();
-        resolve({ statusCode: 0, success: false });
+        resolve({ statusCode: 0, success: false, error: 'Request timed out' });
       });
-    } catch {
-      resolve({ statusCode: 0, success: false });
+    } catch (err) {
+      resolve({ statusCode: 0, success: false, error: err.message });
     }
   });
 }
@@ -92,11 +95,13 @@ function sendPostRequest(url, payload) {
   return new Promise((resolve) => {
     const data = JSON.stringify(payload);
     const parsedUrl = new URL(`${url}/api/participants/register`);
+    const client = parsedUrl.protocol === 'https:' ? https : http;
+    const defaultPort = parsedUrl.protocol === 'https:' ? 443 : 80;
 
     const options = {
       hostname: parsedUrl.hostname,
-      port: parsedUrl.port || 80,
-      path: parsedUrl.pathname,
+      port: parsedUrl.port || defaultPort,
+      path: parsedUrl.pathname + parsedUrl.search,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -105,7 +110,7 @@ function sendPostRequest(url, payload) {
     };
 
     const startTime = performance.now();
-    const req = http.request(options, (res) => {
+    const req = client.request(options, (res) => {
       let raw = '';
       res.on('data', (chunk) => (raw += chunk));
       res.on('end', () => {
@@ -147,24 +152,59 @@ async function runLoadTest() {
   console.log('================================================================');
   console.log('🚀 ICPF Camp High-Throughput Concurrency & Latency Stress Tester');
   console.log('================================================================');
-  console.log(`Target:         ${BASE_URL}/api/participants/register`);
+  console.log(`Target URL:     ${BASE_URL}/api/participants/register`);
   console.log(`Total Campers:  ${TOTAL_REQUESTS}`);
-  console.log(`Target Burst:   ${TARGET_RPS} requests / second\n`);
+  console.log(`Target Burst:   ${TARGET_RPS} requests / second`);
+  console.log(`Payment Mode:   ${SIMULATE_UNPAID ? 'Waiting Payment (Unallocated online form intake)' : 'Paid Online (Immediate 4-tier allocation)'}\n`);
 
   // 1. Check or Bootstrap Server
+  const isLocal = BASE_URL.includes('localhost') || BASE_URL.includes('127.0.0.1');
   let spawnedServer = null;
-  const isUp = (await sendGetRequest(`${BASE_URL}/api/health`)).success;
-  if (!isUp) {
-    console.log(`[Bootstrap] Starting ICPF backend on port 5000...`);
-    spawnedServer = await startServer(5000);
-    await sleep(500);
+  const healthCheck = await sendGetRequest(`${BASE_URL}/api/health`);
+
+  if (!healthCheck.success) {
+    if (isLocal) {
+      console.log(`[Bootstrap] Starting local ICPF backend on port 5000...`);
+      spawnedServer = await startServer(5000);
+      await sleep(800);
+    } else {
+      console.error(`❌ Health check failed for target server: ${BASE_URL}/api/health`);
+      console.error(`   Error details: ${healthCheck.error || 'Server returned status ' + healthCheck.statusCode}`);
+      console.error(`   👉 If testing on Render, make sure the service is live (not spinning down).`);
+      process.exit(1);
+    }
+  } else {
+    console.log(`✅ Target server is healthy: ${BASE_URL}/api/health responded 200 OK.\n`);
   }
 
   // 2. Microbenchmark: Pure In-Memory 4-Tier Allocator Engine
   console.log('🔬 Benchmarking Pure 4-Tier Allocator Engine (1,000 iterations)...');
-  const activeConfig = await CampConfig.getActiveConfig();
-  const mockTeams = activeConfig.teams.map((t) => ({ name: t.name, count: 0, males: 0, females: 0, members: [] }));
-  const mockRooms = activeConfig.rooms.map((r) => ({ name: r.name, gender: r.gender, capacity: r.capacity, occupants: 0 }));
+  let mockTeams = [
+    { name: 'Group A', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group B', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group C', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group D', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group E', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group F', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group G', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group H', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group I', count: 0, males: 0, females: 0, members: [] },
+    { name: 'Group J', count: 0, males: 0, females: 0, members: [] }
+  ];
+  let mockRooms = [
+    { name: 'Male Room 1', gender: 'Male', capacity: 10, occupants: 0 },
+    { name: 'Female Room 1', gender: 'Female', capacity: 10, occupants: 0 }
+  ];
+
+  try {
+    const activeConfig = await CampConfig.getActiveConfig();
+    if (activeConfig && Array.isArray(activeConfig.teams)) {
+      mockTeams = activeConfig.teams.map((t) => ({ name: t.name, count: 0, males: 0, females: 0, members: [] }));
+      mockRooms = activeConfig.rooms.map((r) => ({ name: r.name, gender: r.gender, capacity: r.capacity, occupants: 0 }));
+    }
+  } catch {
+    // If running against remote endpoint without local DB connection, standard 10 groups are used
+  }
 
   const allocDurations = [];
   for (let k = 0; k < 1000; k++) {

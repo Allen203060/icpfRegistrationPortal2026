@@ -13,6 +13,7 @@
     "test:allocator": "node backend/tests/allocator.test.js",
     "test:api": "node backend/tests/api.test.js",
     "test:export": "node backend/tests/export.test.js",
-    "test:load": "node backend/tests/loadTest.js"
+    "test:load": "node backend/tests/loadTest.js",
+    "db:clean": "node backend/scripts/cleanDatabase.js"
   }
 }
