@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Toaster, toast } from 'sonner';
 import {
   UserPlus,
@@ -9,7 +9,11 @@ import {
   RefreshCw,
   BedDouble,
   Sparkles,
-  Layers
+  Layers,
+  Edit2,
+  Check,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import ThreeBackground from './components/common/ThreeBackground';
 import CheckinForm from './components/checkin/CheckinForm';
@@ -106,6 +110,21 @@ export default function App() {
   const [overrideTarget, setOverrideTarget] = useState(null);
   const [isOverrideOpen, setIsOverrideOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [deskSearch, setDeskSearch] = useState('');
+
+  // Always keep desk participants sorted with most recent registrations first
+  const sortedDeskParticipants = useMemo(() => {
+    const list = [...participants].sort((a, b) => (b.serialNo || 0) - (a.serialNo || 0));
+    if (!deskSearch.trim()) return list;
+    const q = deskSearch.toLowerCase().trim();
+    return list.filter(
+      (p) =>
+        p.name?.toLowerCase().includes(q) ||
+        p.church?.toLowerCase().includes(q) ||
+        p.assignedTeam?.toLowerCase().includes(q) ||
+        String(p.serialNo).includes(q)
+    );
+  }, [participants, deskSearch]);
 
   // Dark Mode State (default to dark mode with palette #06141B)
   const [darkMode, setDarkMode] = useState(() => {
@@ -429,46 +448,112 @@ export default function App() {
                 <div className="lg:col-span-5 space-y-4">
                   <div className="bg-white/90 dark:bg-slateMidnight/90 backdrop-blur-md rounded-2xl border border-slateMuted/30 dark:border-slateElevated p-5 shadow-card-light dark:shadow-card-dark transition-all">
                     <div className="flex items-center justify-between pb-3 border-b border-slateMuted/20 dark:border-slateElevated mb-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slateSteel dark:text-slateMuted">
-                        Latest Shift Registrations
-                      </h4>
-                      <span className="text-xs font-mono font-semibold text-slateVoid dark:text-slateFrost">
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slateSteel dark:text-slateMuted flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-sky-500" />
+                          Latest Shift Registrations
+                        </h4>
+                        <p className="text-[11px] text-slateSteel/70 dark:text-slateMuted/70 mt-0.5">
+                          Real-time stream sorted by most recent
+                        </p>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-slateVoid dark:text-slateFrost bg-slateElevated/15 dark:bg-slateElevated px-2.5 py-1 rounded-lg border border-slateMuted/20">
                         {participants.length} Total
                       </span>
                     </div>
 
-                    <div className="divide-y divide-slateMuted/15 dark:divide-slateElevated max-h-[480px] overflow-y-auto">
-                      {participants.slice(0, 8).map((camper) => {
-                        const color = getTeamColor(camper.assignedTeam);
-                        const textColor = getContrastTextColor(color);
-                        return (
-                          <div
-                            key={camper._id || camper.serialNo}
-                            className="py-3 flex items-center justify-between text-xs px-2.5 rounded-xl hover:bg-slateElevated/10 dark:hover:bg-slateElevated/30 transition-colors"
-                          >
-                            <div className="truncate max-w-[200px]">
-                              <span className="font-bold text-slateVoid dark:text-slateFrost block truncate text-xs sm:text-sm">
-                                {camper.name}
-                              </span>
-                              <span className="text-[10px] text-slateSteel dark:text-slateMuted font-mono">
-                                #{camper.serialNo} • {camper.gender} • {camper.church || 'General'}
-                              </span>
-                            </div>
+                    {/* Quick filter search on desk */}
+                    <div className="relative mb-3">
+                      <Search className="w-3.5 h-3.5 text-slateSteel dark:text-slateMuted absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        value={deskSearch}
+                        onChange={(e) => setDeskSearch(e.target.value)}
+                        placeholder="Quick filter recent campers..."
+                        className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/70 dark:bg-slateMidnight/60 text-slateVoid dark:text-slateFrost text-xs focus:outline-none focus:ring-2 focus:ring-slateSteel transition-all placeholder:text-slateSteel/50 dark:placeholder:text-slateMuted/50"
+                      />
+                    </div>
 
-                            <div className="text-right shrink-0">
-                              <span
-                                className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold shadow-2xs border border-black/10"
-                                style={{ backgroundColor: color, color: textColor }}
-                              >
-                                {camper.assignedTeam}
-                              </span>
-                              <span className="text-[10px] text-slateSteel dark:text-slateMuted block mt-0.5 font-medium">
-                                {camper.assignedRoom || 'Day Scholar'}
-                              </span>
+                    <div className="divide-y divide-slateMuted/15 dark:divide-slateElevated max-h-[520px] overflow-y-auto space-y-1">
+                      {sortedDeskParticipants.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-slateSteel dark:text-slateMuted">
+                          No registrations found matching &quot;{deskSearch}&quot;
+                        </div>
+                      ) : (
+                        sortedDeskParticipants.slice(0, 15).map((camper) => {
+                          const color = getTeamColor(camper.assignedTeam);
+                          const textColor = getContrastTextColor(color);
+                          const isPaid = camper.paymentStatus === 'Paid Online' || camper.paymentStatus === 'Paid Cash';
+                          const hasDue = Number(camper.balanceDue) > 0 || camper.paymentStatus === 'Partial / Balance Due';
+
+                          return (
+                            <div
+                              key={camper._id || camper.serialNo}
+                              className="py-3 px-3 rounded-xl hover:bg-slateElevated/10 dark:hover:bg-slateElevated/30 transition-all flex flex-col gap-2 group"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="truncate flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-mono font-bold text-slateSteel dark:text-slateMuted">
+                                      #{camper.serialNo}
+                                    </span>
+                                    <span className="font-bold text-slateVoid dark:text-slateFrost truncate text-xs sm:text-sm">
+                                      {camper.name}
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-slateSteel dark:text-slateMuted font-medium truncate mt-0.5">
+                                    {camper.gender} • {camper.age}y • {camper.church || 'General'}
+                                  </div>
+                                </div>
+
+                                <div className="text-right shrink-0">
+                                  <span
+                                    className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold shadow-2xs border border-black/10"
+                                    style={{ backgroundColor: color, color: textColor }}
+                                  >
+                                    {camper.assignedTeam || 'Pending Team'}
+                                  </span>
+                                  <span className="text-[10px] text-slateSteel dark:text-slateMuted block mt-0.5 font-medium">
+                                    {camper.assignedRoom || 'Day Scholar'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Payment status badge & Review/Edit Action */}
+                              <div className="flex items-center justify-between pt-1 border-t border-slateMuted/10 dark:border-slateElevated/50 text-[11px]">
+                                <div className="flex items-center gap-1.5">
+                                  {isPaid ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold text-[10px]">
+                                      <Check className="w-3 h-3" />
+                                      {camper.paymentStatus} (₹{camper.amountPaid ?? camper.feeTotal ?? 500})
+                                    </span>
+                                  ) : hasDue ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold text-[10px]">
+                                      <AlertTriangle className="w-3 h-3" />
+                                      Due ₹{camper.balanceDue}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-[10px]">
+                                      <Clock className="w-3 h-3" />
+                                      {camper.paymentStatus || 'Waiting Payment'}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenOverride(camper)}
+                                  className="btn-press flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 border border-sky-500/20 transition-all cursor-pointer"
+                                  title="Review & Edit Camper"
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                  <span>Review / Edit</span>
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 </div>

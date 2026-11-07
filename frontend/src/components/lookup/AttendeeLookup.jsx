@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search,
   Edit2,
@@ -17,7 +18,8 @@ import {
   Save,
   ChevronRight,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ArrowUpDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateParticipantNotes, getExportUrl } from '../../services/api';
@@ -33,6 +35,17 @@ export default function AttendeeLookup({
   const [selectedTeam, setSelectedTeam] = useState('ALL');
   const [selectedGender, setSelectedGender] = useState('ALL');
   const [selectedPayment, setSelectedPayment] = useState('ALL');
+  const [sortBy, setSortBy] = useState('recent');
+
+  // Lock body scroll when quick edit modal is active
+  useEffect(() => {
+    if (quickEditCamper) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [quickEditCamper]);
 
   // Quick Inline Notes / Payment Edit State
   const [quickEditCamper, setQuickEditCamper] = useState(null);
@@ -48,9 +61,9 @@ export default function AttendeeLookup({
   });
   const [isSavingQuick, setIsSavingQuick] = useState(false);
 
-  // Filtered participants list
+  // Filtered and sorted participants list (defaults to Most Recent first)
   const filteredParticipants = useMemo(() => {
-    return participants.filter((p) => {
+    const list = participants.filter((p) => {
       const query = searchTerm.toLowerCase().trim();
       const matchSearch =
         !query ||
@@ -82,7 +95,29 @@ export default function AttendeeLookup({
 
       return matchSearch && matchTeam && matchGender && matchPayment;
     });
-  }, [participants, searchTerm, selectedTeam, selectedGender, selectedPayment]);
+
+    return list.sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return (a.serialNo || 0) - (b.serialNo || 0);
+        case 'name-asc':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'name-desc':
+          return (b.name || '').localeCompare(a.name || '');
+        case 'age-asc':
+          return (a.age || 0) - (b.age || 0);
+        case 'age-desc':
+          return (b.age || 0) - (a.age || 0);
+        case 'due-desc':
+          return (b.balanceDue || 0) - (a.balanceDue || 0);
+        case 'team':
+          return (a.assignedTeam || '').localeCompare(b.assignedTeam || '');
+        case 'recent':
+        default:
+          return (b.serialNo || 0) - (a.serialNo || 0);
+      }
+    });
+  }, [participants, searchTerm, selectedTeam, selectedGender, selectedPayment, sortBy]);
 
   const getTeamColor = (teamName) => {
     return (
@@ -264,9 +299,9 @@ export default function AttendeeLookup({
           </div>
         </div>
 
-        {/* Search input + 3 Filters */}
+        {/* Search input + 4 Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 mt-4">
-          <div className="sm:col-span-2 md:col-span-5 relative">
+          <div className="sm:col-span-2 md:col-span-4 relative">
             <Search className="w-4 h-4 text-slateSteel dark:text-slateMuted absolute left-3.5 top-3" />
             <input
               type="text"
@@ -286,8 +321,28 @@ export default function AttendeeLookup({
             )}
           </div>
 
+          {/* Sort By Filter */}
+          <div className="md:col-span-2 relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/70 dark:bg-slateMidnight/60 text-slateVoid dark:text-slateFrost text-xs focus:outline-none focus:ring-2 focus:ring-slateSteel font-medium appearance-none cursor-pointer"
+              title="Sort Attendees"
+            >
+              <option value="recent">Most Recent (#Desc)</option>
+              <option value="oldest">Oldest First (#Asc)</option>
+              <option value="name-asc">Name (A → Z)</option>
+              <option value="name-desc">Name (Z → A)</option>
+              <option value="age-asc">Age (Youngest)</option>
+              <option value="age-desc">Age (Oldest)</option>
+              <option value="due-desc">Highest Dues Pending</option>
+              <option value="team">Team Group</option>
+            </select>
+            <ArrowUpDown className="w-3.5 h-3.5 text-slateSteel dark:text-slateMuted absolute left-2.5 top-3.5 pointer-events-none" />
+          </div>
+
           {/* Team Filter */}
-          <div className="md:col-span-3">
+          <div className="md:col-span-2">
             <select
               value={selectedTeam}
               onChange={(e) => setSelectedTeam(e.target.value)}
@@ -652,8 +707,8 @@ export default function AttendeeLookup({
         </>
       )}
 
-      {/* QUICK INLINE PAYMENT & NOTES EDIT MODAL */}
-      {quickEditCamper && (
+      {/* QUICK INLINE PAYMENT & NOTES EDIT MODAL (Mounted via Portal directly to body to prevent scroll offset) */}
+      {quickEditCamper && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slateVoid/80 backdrop-blur-sm modal-backdrop-enter">
           <div className="bg-white dark:bg-slateMidnight rounded-2xl max-w-md w-full max-h-[92dvh] overflow-y-auto overscroll-contain p-6 shadow-2xl border border-slateMuted/30 dark:border-slateElevated relative modal-dialog-enter">
             <button
@@ -681,8 +736,7 @@ export default function AttendeeLookup({
             </div>
 
             <form onSubmit={handleSaveQuick} className="space-y-4">
-              {/* Payment Status & Fee Preset Dropdown — stacks on phones so
-                  the two selects stay thumb-wide instead of ~150px each */}
+              {/* Payment Status & Fee Preset Dropdown */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
@@ -815,7 +869,8 @@ export default function AttendeeLookup({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

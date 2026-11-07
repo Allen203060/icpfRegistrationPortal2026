@@ -1,22 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, AlertTriangle, Wallet, FileText, BedDouble, Users } from 'lucide-react';
 
 export default function OverrideModal({ isOpen, participant, campConfig, onClose, onSave }) {
-  if (!isOpen || !participant) return null;
-
-  const [assignedTeam, setAssignedTeam] = useState(participant.assignedTeam || '');
-  const [assignedRoom, setAssignedRoom] = useState(participant.assignedRoom || '');
-  const [staying, setStaying] = useState(participant.staying !== false);
-  const [notes, setNotes] = useState(participant.notes || '');
-  const [paymentStatus, setPaymentStatus] = useState(participant.paymentStatus || 'Waiting Payment');
+  const [assignedTeam, setAssignedTeam] = useState(participant?.assignedTeam || '');
+  const [assignedRoom, setAssignedRoom] = useState(participant?.assignedRoom || '');
+  const [staying, setStaying] = useState(participant?.staying !== false);
+  const [notes, setNotes] = useState(participant?.notes || '');
+  const [paymentStatus, setPaymentStatus] = useState(participant?.paymentStatus || 'Waiting Payment');
   const [feeOption, setFeeOption] = useState('500');
-  const [feeTotal, setFeeTotal] = useState(participant.feeTotal ?? 500);
-  const [amountPaid, setAmountPaid] = useState(participant.amountPaid ?? 0);
-  const [balanceDue, setBalanceDue] = useState(participant.balanceDue ?? 0);
-  const [balanceToReturn, setBalanceToReturn] = useState(participant.balanceToReturn ?? 0);
-  const [paymentNotes, setPaymentNotes] = useState(participant.paymentNotes || '');
+  const [feeTotal, setFeeTotal] = useState(participant?.feeTotal ?? 500);
+  const [amountPaid, setAmountPaid] = useState(participant?.amountPaid ?? 0);
+  const [balanceDue, setBalanceDue] = useState(participant?.balanceDue ?? 0);
+  const [balanceToReturn, setBalanceToReturn] = useState(participant?.balanceToReturn ?? 0);
+  const [paymentNotes, setPaymentNotes] = useState(participant?.paymentNotes || '');
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen]);
 
   useEffect(() => {
+    if (!participant) return;
     setAssignedTeam(participant.assignedTeam || '');
     setAssignedRoom(participant.assignedRoom || '');
     setStaying(participant.staying !== false);
@@ -82,11 +92,13 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
     onClose();
   };
 
+  if (!isOpen || !participant) return null;
+
   const eligibleRooms = (campConfig?.rooms || []).filter(
     (r) => r.gender?.toLowerCase() === participant.gender?.toLowerCase()
   );
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slateVoid/80 backdrop-blur-sm modal-backdrop-enter">
       <div className="bg-white dark:bg-slateMidnight rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-slateMuted/30 dark:border-slateElevated relative modal-dialog-enter">
         <button
@@ -295,6 +307,7 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
