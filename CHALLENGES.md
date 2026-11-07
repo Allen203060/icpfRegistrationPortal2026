@@ -156,3 +156,11 @@ This journal tracks architectural hurdles, trade-offs, bugs, and key engineering
   3. Added an automatic `overflow: hidden` lock on `document.body` while modals are active to prevent background scrolling behind the dialog.
 - **Key Takeaway (Interview Insight):** *CSS Containing Block vs React Portals*: Never let animated page wrappers create containing blocks for modals and toast overlays. Decoupling modal rendering via React Portals directly into `document.body` guarantees invariant viewport alignment and protects against subtle CSS transform boundaries.
 
+---
+
+### Challenge 17: Temporal Dead Zone (TDZ) Runtime Crash in React Hooks Evaluation
+- **The Problem:** Navigating to the "Attendee Lookup" tab caused the tab to fail or display a blank screen.
+- **Root Cause:** A `useEffect` hook referencing `quickEditCamper` in its dependency array `[quickEditCamper]` was declared higher in the component function body than `const [quickEditCamper, setQuickEditCamper] = useState(null)`. Unlike `var` declarations, ES6 `const` and `let` variables are not hoisted, residing instead in the *Temporal Dead Zone (TDZ)* until initialized. When React evaluated the component function, passing the uninitialized variable to `useEffect` threw `Uncaught ReferenceError: Cannot access 'quickEditCamper' before initialization`.
+- **Solution:** Reordered hook declarations so that all `useState` primitives precede any `useEffect` or `useMemo` hooks consuming them, and added defensive fallback `(participants || []).filter(...)` to guard against null lists.
+- **Key Takeaway (Interview Insight):** *Hook Top-to-Bottom Evaluation & Lexical Scoping*: React function components are standard JavaScript functions re-executed on every render. Hooks are subject to identical JavaScript lexical scoping and Temporal Dead Zone constraints; state variables must always be initialized lexically before any effect or memoization array reads them.
+
