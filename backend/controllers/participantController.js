@@ -176,21 +176,11 @@ async function registerParticipant(req, res, next) {
           groupRegistrationId: req.body.groupRegistrationId || ''
         };
 
-        const paymentComplete = isPaymentComplete(
-          participantData.paymentStatus,
-          participantData.balanceDue,
-          participantData.feeTotal,
-          participantData.amountPaid
-        );
-
-        let allocation = { assignedTeam: '', assignedRoom: '' };
-        // Allocate only if payment is complete OR if an explicit team was specified by admin override
-        if (paymentComplete || req.body.assignedTeam) {
-          allocation = allocateParticipant(participantData, teams, rooms, {
-            lastAssignedTeam,
-            requestedTeam: req.body.requestedTeam || req.body.assignedTeam
-          });
-        }
+        // Immediately allocate team and room irrespective of payment status upon registration
+        const allocation = allocateParticipant(participantData, teams, rooms, {
+          lastAssignedTeam,
+          requestedTeam: req.body.requestedTeam || req.body.assignedTeam
+        });
 
         const [participant] = await Participant.create([{
           ...participantData,
@@ -297,34 +287,24 @@ async function registerGroup(req, res, next) {
           paymentNotes: m.paymentNotes || (i === 0 ? paymentNotes : '')
         };
 
-        const memPaymentComplete = isPaymentComplete(
-          participantData.paymentStatus,
-          participantData.balanceDue,
-          participantData.feeTotal,
-          participantData.amountPaid
-        );
+        const allocOptions = {
+          requestedTeam: keepTogether ? groupCommonTeam : null,
+          lastAssignedTeam: lastTeam
+        };
 
-        let allocation = { assignedTeam: '', assignedRoom: '' };
-        if (memPaymentComplete) {
-          const allocOptions = {
-            requestedTeam: keepTogether ? groupCommonTeam : null,
-            lastAssignedTeam: lastTeam
-          };
+        const allocation = allocateParticipant(participantData, teams, rooms, allocOptions);
+        if (keepTogether && !groupCommonTeam) {
+          groupCommonTeam = allocation.assignedTeam;
+        }
+        lastTeam = allocation.assignedTeam;
 
-          allocation = allocateParticipant(participantData, teams, rooms, allocOptions);
-          if (keepTogether && !groupCommonTeam) {
-            groupCommonTeam = allocation.assignedTeam;
-          }
-          lastTeam = allocation.assignedTeam;
+        // Mutate local state for subsequent member allocations in same batch
+        const tObj = teams.find((t) => t.name === allocation.assignedTeam);
+        if (tObj) tObj.members.push({ ...participantData, ...allocation });
 
-          // Mutate local state for subsequent member allocations in same batch
-          const tObj = teams.find((t) => t.name === allocation.assignedTeam);
-          if (tObj) tObj.members.push({ ...participantData, ...allocation });
-
-          if (allocation.assignedRoom) {
-            const rObj = rooms.find((r) => r.name === allocation.assignedRoom);
-            if (rObj) rObj.occupiedCount = (rObj.occupiedCount || 0) + 1;
-          }
+        if (allocation.assignedRoom) {
+          const rObj = rooms.find((r) => r.name === allocation.assignedRoom);
+          if (rObj) rObj.occupiedCount = (rObj.occupiedCount || 0) + 1;
         }
 
         const [created] = await Participant.create([{

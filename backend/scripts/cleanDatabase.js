@@ -72,3 +72,4 @@ cleanDatabase().catch(async (err) => {
   } catch {}
   process.exit(1);
 });
+
