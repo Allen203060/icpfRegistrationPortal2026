@@ -59,8 +59,8 @@ interface IParticipant {
   location?: string;            // Optional, fallback for church
   staying: boolean;             // Residential (true) vs Day-scholar (false)
   phone?: string;               // Optional contact number
-  assignedTeam: string;         // Name of the team (e.g., "Team Gideon")
-  assignedRoom?: string;        // Room designation (e.g., "Male Room 1")
+  assignedTeam: string;         // Name of the team (e.g., "Group A"), or empty string if pending payment
+  assignedRoom?: string;        // Room designation (e.g., "Male Room 1"), or empty if pending/day scholar
   checkedInAt: Date;            // Defaults to Date.now
   notes?: string;               // Special requests or medical/dietary notes
   paymentStatus: 'Paid Online' | 'Paid Cash' | 'Waiting Payment' | 'Partial / Balance Due' | 'Exempt';

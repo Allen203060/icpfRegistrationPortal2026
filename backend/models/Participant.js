@@ -59,8 +59,8 @@ const participantSchema = new mongoose.Schema(
     },
     assignedTeam: {
       type: String,
-      required: [true, 'Assigned team is required'],
       trim: true,
+      default: '',
       index: true
     },
     assignedRoom: {

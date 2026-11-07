@@ -55,6 +55,7 @@
 - [x] **Google Apps Script & Forms Integration:** Built `google_apps_script/Code.gs` for live webhook synchronization from Google Forms into the registration backend.
 - [x] **Production Deployment Readiness (Render + Vercel):** Created `render.yaml` Blueprint, `frontend/vercel.json` SPA rewrites, dynamic `VITE_API_URL` environment handling, and CORS origins matching for seamless production deployment.
 - [x] **Production-Grade Documentation:** Authored comprehensive `README.md` with MERN architecture diagrams, deployment walkthroughs, and test guides.
+- [x] **Payment-Gated Allocation Workflow:** Campers who register online (Google Forms) or at the desk with `Waiting Payment` are saved with empty team and room assignments. When their payment is confirmed at the counter (`Paid Cash`, `Paid Online`, `Exempt`), the backend automatically triggers the 4-tier diversity heuristic allocator and assigns their group and room in real-time.
   - **Zero Backend Tampering:** Kept all M1–M4 backend APIs, services, and database models 100% intact.
 
 

@@ -178,10 +178,17 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
       setLatestAllocation(result);
       if (onRegistered) onRegistered(result);
 
-      toast.success(`${result.name} allocated to ${result.assignedTeam}!`, {
-        id: toastId,
-        description: `Room: ${result.assignedRoom || 'Day Scholar'}`
-      });
+      if (result.assignedTeam) {
+        toast.success(`${result.name} allocated to ${result.assignedTeam}!`, {
+          id: toastId,
+          description: `Room: ${result.assignedRoom || 'Day Scholar'}`
+        });
+      } else {
+        toast.success(`Registered ${result.name} (#${result.serialNo})!`, {
+          id: toastId,
+          description: 'Payment pending — Group and room will be assigned once payment is confirmed.'
+        });
+      }
 
       // Retain church and location for rapid queue processing
       setSingleForm((prev) => ({
@@ -436,13 +443,21 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                 Assigned Group / Team
               </span>
               <div className="flex items-center gap-2">
-                <span
-                  className="w-3.5 h-3.5 rounded-full shrink-0 border border-black/10"
-                  style={{ backgroundColor: getTeamColor(latestAllocation.assignedTeam) }}
-                />
-                <span className="text-xl font-black text-slateVoid dark:text-slateFrost tracking-tight">
-                  {latestAllocation.assignedTeam}
-                </span>
+                {latestAllocation.assignedTeam ? (
+                  <>
+                    <span
+                      className="w-3.5 h-3.5 rounded-full shrink-0 border border-black/10"
+                      style={{ backgroundColor: getTeamColor(latestAllocation.assignedTeam) }}
+                    />
+                    <span className="text-xl font-black text-slateVoid dark:text-slateFrost tracking-tight">
+                      {latestAllocation.assignedTeam}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                    Pending Payment
+                  </span>
+                )}
               </div>
             </div>
 
@@ -454,7 +469,9 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
               <div className="flex items-center gap-2">
                 <BedDouble className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
                 <span className="text-xl font-black text-slateVoid dark:text-slateFrost tracking-tight">
-                  {latestAllocation.assignedRoom || 'Day Scholar'}
+                  {latestAllocation.assignedTeam
+                    ? (latestAllocation.assignedRoom || 'Day Scholar')
+                    : 'Pending Payment'}
                 </span>
               </div>
             </div>
@@ -467,7 +484,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
               <div className="flex items-center gap-2">
                 <span
                   className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
-                    latestAllocation.paymentStatus === 'Paid Cash' || latestAllocation.paymentStatus === 'Paid Online'
+                    latestAllocation.paymentStatus === 'Paid Cash' || latestAllocation.paymentStatus === 'Paid Online' || latestAllocation.paymentStatus === 'Exempt'
                       ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
                       : latestAllocation.paymentStatus === 'Waiting Payment'
                       ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
@@ -492,8 +509,16 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
           <div className="mt-3.5 px-3 py-2 rounded-lg bg-slateElevated/10 dark:bg-slateElevated/30 text-xs text-slateSteel dark:text-slateMuted flex items-center gap-2">
             <span className="font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">Tell Camper:</span>
             <span>
-              "You are in <strong>{latestAllocation.assignedTeam}</strong>, Room:{' '}
-              <strong>{latestAllocation.assignedRoom || 'Day Scholar'}</strong>, Badge #{latestAllocation.serialNo}."
+              {latestAllocation.assignedTeam ? (
+                <>
+                  "You are in <strong>{latestAllocation.assignedTeam}</strong>, Room:{' '}
+                  <strong>{latestAllocation.assignedRoom || 'Day Scholar'}</strong>, Badge #{latestAllocation.serialNo}."
+                </>
+              ) : (
+                <>
+                  "Registration saved (Badge #{latestAllocation.serialNo}). Your group and room will be assigned once payment of <strong>₹{latestAllocation.balanceDue || latestAllocation.feeTotal}</strong> is confirmed."
+                </>
+              )}
             </span>
           </div>
         </div>
@@ -563,16 +588,22 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                       <span className="text-slateSteel dark:text-slateMuted">{m.age}y</span>
                     </td>
                     <td className="py-2.5 px-3">
-                      <span
-                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold text-slateVoid border border-black/10 shadow-2xs"
-                        style={{ backgroundColor: getTeamColor(m.assignedTeam) }}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-black/20" />
-                        {m.assignedTeam}
-                      </span>
+                      {m.assignedTeam ? (
+                        <span
+                          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold text-slateVoid border border-black/10 shadow-2xs"
+                          style={{ backgroundColor: getTeamColor(m.assignedTeam) }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-black/20" />
+                          {m.assignedTeam}
+                        </span>
+                      ) : (
+                        <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          Pending Payment
+                        </span>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 font-semibold text-slateVoid dark:text-slateFrost">
-                      {m.assignedRoom || 'Day Scholar'}
+                      {m.assignedTeam ? (m.assignedRoom || 'Day Scholar') : '—'}
                     </td>
                     <td className="py-2.5 px-3 text-slateSteel dark:text-slateMuted truncate max-w-[150px]">
                       {m.notes || '—'}

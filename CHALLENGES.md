@@ -141,6 +141,15 @@ This journal tracks architectural hurdles, trade-offs, bugs, and key engineering
 - **Verification:** Production build passes (`vite build`, 5.34s). A live phone-viewport check was started but not completed (user asked for the file instead) — verify on a real phone before the event.
 - **Key Takeaway (Interview Insight):** *Scope Global Resets to Their Actual Target*: A well-intentioned global rule (16px to stop iOS zoom) silently restyled every button in the app. Resets must name exactly the elements they protect — and any screen the desk team will hold in one hand deserves a real-device viewport check, not a desktop resize.
 
+---
+
+### Challenge 15: Payment-Gated Deferred Allocation vs. Ghost Capacity Starvation
+- **The Problem:** Attendees who pre-registered online via Google Forms without pre-paying were eagerly allocated team slots and dorm beds in advance. If online registrants fail to show up on camp day, their pre-allocated slots create "ghost occupancy", starving in-person walk-ins and distorting gender and age parity across teams.
+- **Root Cause:** Eager allocation at submission time regardless of payment status.
+- **Solution:** Transitioned to deferred lazy allocation. Participants created with `paymentStatus: 'Waiting Payment'` or `amountPaid: 0` are stored with unallocated assignments (`assignedTeam: ''`, `assignedRoom: ''`). When their payment is marked complete at the check-in desk (`Paid Cash`, `Paid Online`, `Exempt`), the backend automatically triggers `allocateParticipant` to assign their optimal group and room based on actual, live camp attendee ratios.
+- **Key Takeaway (Interview Insight):** *Deferred State Materialization (Lazy Allocation)*: In reservation and allocation systems with non-zero no-show rates, eagerly binding scarce shared resources (dorm beds, balanced team slots) before a commitment signal (payment) leads to artificial capacity starvation. Deferring allocation until commitment preserves resource availability and maximizes heuristic fairness over confirmed attendees.
+
+
 
 
 

@@ -63,10 +63,10 @@ function generateCamper(i) {
     staying: isStaying,
     phone: `+91 984${Math.floor(1000000 + Math.random() * 9000000)}`,
     notes: `${isStudent ? 'Student' : 'Working'} • First Timer: ${isFirstTimer ? 'Yes' : 'No'}`,
-    paymentStatus: 'Waiting Payment',
+    paymentStatus: 'Paid Online',
     feeTotal: isStaying ? 500 : 400,
-    amountPaid: 0,
-    balanceDue: isStaying ? 500 : 400
+    amountPaid: isStaying ? 500 : 400,
+    balanceDue: 0
   };
 }
 

@@ -187,21 +187,29 @@ export default function App() {
 
   const handleSaveOverride = async (updatedCamper) => {
     try {
+      let finalCamper = updatedCamper;
       if (updatedCamper._id && !String(updatedCamper._id).startsWith('seed_')) {
-        await updateParticipant(updatedCamper._id, updatedCamper);
+        const res = await updateParticipant(updatedCamper._id, updatedCamper);
+        if (res) finalCamper = res;
       }
       setParticipants((prev) =>
         prev.map((p) =>
-          (p._id || p.serialNo) === (updatedCamper._id || updatedCamper.serialNo)
-            ? updatedCamper
+          (p._id || p.serialNo) === (finalCamper._id || finalCamper.serialNo)
+            ? finalCamper
             : p
         )
       );
-      toast.success(`Updated details for ${updatedCamper.name}`, {
-        description: `Team: ${updatedCamper.assignedTeam} • Room: ${
-          updatedCamper.assignedRoom || 'Day Scholar'
-        }`,
-      });
+      if (!updatedCamper.assignedTeam && finalCamper.assignedTeam) {
+        toast.success(`Payment confirmed! ${finalCamper.name} allocated to ${finalCamper.assignedTeam}! 🎉`, {
+          description: `Room: ${finalCamper.staying ? (finalCamper.assignedRoom || 'Assigned') : 'Day Scholar'}`,
+        });
+      } else {
+        toast.success(`Updated details for ${finalCamper.name}`, {
+          description: finalCamper.assignedTeam ? `Team: ${finalCamper.assignedTeam} • Room: ${
+            finalCamper.assignedRoom || 'Day Scholar'
+          }` : 'Allocation pending payment confirmation',
+        });
+      }
     } catch (err) {
       toast.error(`Failed to update participant: ${err.message}`);
     }

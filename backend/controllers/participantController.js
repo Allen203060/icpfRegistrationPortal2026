@@ -32,6 +32,67 @@ function getMongoError(error) {
   return error;
 }
 
+function isPaymentComplete(status, balanceDue, feeTotal, amountPaid) {
+  if (status === 'Paid Online' || status === 'Paid Cash' || status === 'Exempt') {
+    return true;
+  }
+  if (status === 'Waiting Payment' || status === 'Partial / Balance Due') {
+    return false;
+  }
+  if (typeof balanceDue === 'number' && balanceDue <= 0 && Number(amountPaid) >= Number(feeTotal) && Number(amountPaid) > 0) {
+    return true;
+  }
+  return false;
+}
+
+async function allocateIfEligible(participant, config, session = null) {
+  // If already allocated a team, do not reallocate
+  if (participant.assignedTeam && participant.assignedTeam.trim()) {
+    return participant;
+  }
+
+  // Check if payment is complete
+  const paymentComplete = isPaymentComplete(
+    participant.paymentStatus,
+    participant.balanceDue,
+    participant.feeTotal,
+    participant.amountPaid
+  );
+
+  if (!paymentComplete) {
+    return participant;
+  }
+
+  // Load existing participants to build live team and room stats
+  const existingQuery = Participant.find(
+    { _id: { $ne: participant._id } },
+    { name: 1, age: 1, gender: 1, church: 1, location: 1, staying: 1, assignedTeam: 1, assignedRoom: 1 }
+  );
+  if (session) existingQuery.session(session);
+  const existing = await existingQuery.lean();
+
+  const teams = config.teams.map((team) => ({
+    ...(team.toObject ? team.toObject() : team),
+    members: existing.filter((p) => p.assignedTeam === team.name)
+  }));
+  const rooms = config.rooms.map((room) => ({
+    ...(room.toObject ? room.toObject() : room),
+    occupiedCount: existing.filter((p) => p.staying && p.assignedRoom === room.name).length
+  }));
+
+  const lastParticipant = existing.filter((p) => p.assignedTeam).pop();
+  const lastAssignedTeam = lastParticipant ? lastParticipant.assignedTeam : null;
+
+  const candidate = participant.toObject ? participant.toObject() : participant;
+  const allocation = allocateParticipant(candidate, teams, rooms, {
+    lastAssignedTeam
+  });
+
+  participant.assignedTeam = allocation.assignedTeam;
+  participant.assignedRoom = allocation.assignedRoom;
+  return participant;
+}
+
 async function withOptionalTransaction(fn) {
   let session;
   try {
@@ -115,10 +176,21 @@ async function registerParticipant(req, res, next) {
           groupRegistrationId: req.body.groupRegistrationId || ''
         };
 
-        const allocation = allocateParticipant(participantData, teams, rooms, {
-          lastAssignedTeam,
-          requestedTeam: req.body.requestedTeam
-        });
+        const paymentComplete = isPaymentComplete(
+          participantData.paymentStatus,
+          participantData.balanceDue,
+          participantData.feeTotal,
+          participantData.amountPaid
+        );
+
+        let allocation = { assignedTeam: '', assignedRoom: '' };
+        // Allocate only if payment is complete OR if an explicit team was specified by admin override
+        if (paymentComplete || req.body.assignedTeam) {
+          allocation = allocateParticipant(participantData, teams, rooms, {
+            lastAssignedTeam,
+            requestedTeam: req.body.requestedTeam || req.body.assignedTeam
+          });
+        }
 
         const [participant] = await Participant.create([{
           ...participantData,
@@ -225,24 +297,34 @@ async function registerGroup(req, res, next) {
           paymentNotes: m.paymentNotes || (i === 0 ? paymentNotes : '')
         };
 
-        const allocOptions = {
-          requestedTeam: keepTogether ? groupCommonTeam : null,
-          lastAssignedTeam: lastTeam
-        };
+        const memPaymentComplete = isPaymentComplete(
+          participantData.paymentStatus,
+          participantData.balanceDue,
+          participantData.feeTotal,
+          participantData.amountPaid
+        );
 
-        const allocation = allocateParticipant(participantData, teams, rooms, allocOptions);
-        if (keepTogether && !groupCommonTeam) {
-          groupCommonTeam = allocation.assignedTeam;
-        }
-        lastTeam = allocation.assignedTeam;
+        let allocation = { assignedTeam: '', assignedRoom: '' };
+        if (memPaymentComplete) {
+          const allocOptions = {
+            requestedTeam: keepTogether ? groupCommonTeam : null,
+            lastAssignedTeam: lastTeam
+          };
 
-        // Mutate local state for subsequent member allocations in same batch
-        const tObj = teams.find((t) => t.name === allocation.assignedTeam);
-        if (tObj) tObj.members.push({ ...participantData, ...allocation });
+          allocation = allocateParticipant(participantData, teams, rooms, allocOptions);
+          if (keepTogether && !groupCommonTeam) {
+            groupCommonTeam = allocation.assignedTeam;
+          }
+          lastTeam = allocation.assignedTeam;
 
-        if (allocation.assignedRoom) {
-          const rObj = rooms.find((r) => r.name === allocation.assignedRoom);
-          if (rObj) rObj.occupiedCount = (rObj.occupiedCount || 0) + 1;
+          // Mutate local state for subsequent member allocations in same batch
+          const tObj = teams.find((t) => t.name === allocation.assignedTeam);
+          if (tObj) tObj.members.push({ ...participantData, ...allocation });
+
+          if (allocation.assignedRoom) {
+            const rObj = rooms.find((r) => r.name === allocation.assignedRoom);
+            if (rObj) rObj.occupiedCount = (rObj.occupiedCount || 0) + 1;
+          }
         }
 
         const [created] = await Participant.create([{
@@ -272,19 +354,28 @@ async function registerGroup(req, res, next) {
 async function updateParticipantNotes(req, res, next) {
   try {
     const { notes, paymentNotes, paymentStatus, amountPaid, balanceDue, balanceToReturn } = req.body;
-    const update = {};
-    if (notes !== undefined) update.notes = notes;
-    if (paymentNotes !== undefined) update.paymentNotes = paymentNotes;
-    if (paymentStatus !== undefined) update.paymentStatus = paymentStatus;
-    if (amountPaid !== undefined) update.amountPaid = Number(amountPaid);
-    if (balanceDue !== undefined) update.balanceDue = Number(balanceDue);
-    if (balanceToReturn !== undefined) update.balanceToReturn = Number(balanceToReturn);
-
-    const updated = await Participant.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
-    if (!updated) {
+    const participant = await Participant.findById(req.params.id);
+    if (!participant) {
       throw createHttpError('Participant was not found.', 'PARTICIPANT_NOT_FOUND', 404);
     }
-    res.status(200).json({ success: true, data: updated });
+
+    if (notes !== undefined) participant.notes = notes;
+    if (paymentNotes !== undefined) participant.paymentNotes = paymentNotes;
+    if (paymentStatus !== undefined) participant.paymentStatus = paymentStatus;
+    if (amountPaid !== undefined) participant.amountPaid = Number(amountPaid);
+    if (balanceDue !== undefined) participant.balanceDue = Number(balanceDue);
+    if (balanceToReturn !== undefined) participant.balanceToReturn = Number(balanceToReturn);
+
+    // If currently unallocated, trigger allocation if payment is now complete
+    if (!participant.assignedTeam) {
+      const config = await CampConfig.findOne({ active: true });
+      if (config) {
+        await allocateIfEligible(participant, config);
+      }
+    }
+
+    await participant.save();
+    res.status(200).json({ success: true, data: participant });
   } catch (error) {
     next(getMongoError(error));
   }
@@ -391,7 +482,7 @@ async function updateParticipant(req, res, next) {
       const targetRoom = updates.assignedRoom !== undefined
         ? updates.assignedRoom
         : (nextStaying ? participant.assignedRoom : '');
-      if (nextStaying) {
+      if (nextStaying && targetRoom) {
         const room = config.rooms.find((entry) => entry.name === targetRoom);
         if (!room) throw createHttpError('A valid room is required for a residential participant.', 'INVALID_ROOM');
         if (room.gender !== nextGender) {
@@ -407,7 +498,7 @@ async function updateParticipant(req, res, next) {
         if (occupancy >= room.capacity) {
           throw createHttpError('Room has reached its bed capacity.', 'ROOM_CAPACITY_EXHAUSTED', 409);
         }
-      } else {
+      } else if (!nextStaying) {
         updates.assignedRoom = '';
       }
 
@@ -418,6 +509,12 @@ async function updateParticipant(req, res, next) {
       if (updates.feeTotal !== undefined) participant.feeTotal = Number(updates.feeTotal);
       if (updates.balanceDue !== undefined) participant.balanceDue = Number(updates.balanceDue);
       if (updates.balanceToReturn !== undefined) participant.balanceToReturn = Number(updates.balanceToReturn);
+
+      // If unallocated and updates did not manually assign a team, allocate if payment is complete!
+      if (!participant.assignedTeam && updates.assignedTeam === undefined) {
+        await allocateIfEligible(participant, config, session);
+      }
+
       await participant.save(session ? { session } : {});
       return participant;
     });

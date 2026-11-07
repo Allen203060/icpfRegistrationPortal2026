@@ -175,20 +175,29 @@ export default function AttendeeLookup({
 
     setIsSavingQuick(true);
     try {
-      if (quickEditCamper._id && !String(quickEditCamper._id).startsWith('seed_')) {
-        await updateParticipantNotes(quickEditCamper._id, quickForm);
-      }
-
-      const updatedCamper = {
+      let updatedCamper = {
         ...quickEditCamper,
         ...quickForm,
       };
+
+      if (quickEditCamper._id && !String(quickEditCamper._id).startsWith('seed_')) {
+        const res = await updateParticipantNotes(quickEditCamper._id, quickForm);
+        if (res) {
+          updatedCamper = res;
+        }
+      }
 
       if (onSaveParticipant) {
         onSaveParticipant(updatedCamper);
       }
 
-      toast.success(`Updated notes & payment for ${quickEditCamper.name}`);
+      if (!quickEditCamper.assignedTeam && updatedCamper.assignedTeam) {
+        toast.success(`Payment confirmed! ${updatedCamper.name} allocated to ${updatedCamper.assignedTeam}! 🎉`, {
+          description: `Room: ${updatedCamper.staying ? (updatedCamper.assignedRoom || 'Assigned') : 'Day Scholar'}`
+        });
+      } else {
+        toast.success(`Updated notes & payment for ${quickEditCamper.name}`);
+      }
       setQuickEditCamper(null);
     } catch (err) {
       toast.error(err.message || 'Failed to update attendee notes');
@@ -370,18 +379,24 @@ export default function AttendeeLookup({
                       </div>
                     </div>
 
-                    <span
-                      className="px-2.5 py-0.5 rounded text-[11px] font-bold text-slateVoid shadow-2xs shrink-0 border border-black/10"
-                      style={{ backgroundColor: teamColor }}
-                    >
-                      {camper.assignedTeam}
-                    </span>
+                    {camper.assignedTeam ? (
+                      <span
+                        className="px-2.5 py-0.5 rounded text-[11px] font-bold text-slateVoid shadow-2xs shrink-0 border border-black/10"
+                        style={{ backgroundColor: teamColor }}
+                      >
+                        {camper.assignedTeam}
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                        Pending Payment
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-slateMuted/15 dark:border-slateElevated text-xs">
                     <div className="flex items-center gap-1.5 text-slateVoid dark:text-slateFrost font-semibold">
                       <BedDouble className="w-3.5 h-3.5 text-slateSteel dark:text-slateMuted" />
-                      <span>{camper.assignedRoom || 'Day Scholar'}</span>
+                      <span>{camper.assignedTeam ? (camper.staying ? (camper.assignedRoom || 'Unassigned') : 'Day Scholar') : '—'}</span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -480,20 +495,31 @@ export default function AttendeeLookup({
 
                         {/* Assigned Group */}
                         <td className="py-3.5 px-4">
-                          <span
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black text-slateVoid shadow-2xs border border-black/10"
-                            style={{ backgroundColor: teamColor }}
-                          >
-                            <span className="w-2 h-2 rounded-full bg-black/20" />
-                            {camper.assignedTeam}
-                          </span>
+                          {camper.assignedTeam ? (
+                            <span
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black text-slateVoid shadow-2xs border border-black/10"
+                              style={{ backgroundColor: teamColor }}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-black/20" />
+                              {camper.assignedTeam}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                              <Clock className="w-3 h-3" />
+                              Pending Payment
+                            </span>
+                          )}
                         </td>
 
                         {/* Assigned Room */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-1.5 font-bold text-slateVoid dark:text-slateFrost text-xs">
                             <BedDouble className="w-3.5 h-3.5 text-slateSteel dark:text-slateMuted shrink-0" />
-                            <span>{camper.assignedRoom || 'Day Scholar'}</span>
+                            <span>
+                              {camper.assignedTeam
+                                ? (camper.staying ? (camper.assignedRoom || 'Unassigned') : 'Day Scholar')
+                                : '—'}
+                            </span>
                           </div>
                           <div className="text-[10px] text-slateSteel dark:text-slateMuted">
                             {camper.staying !== false ? 'Residential' : 'Day Scholar'}

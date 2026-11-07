@@ -79,7 +79,7 @@ async function runApiTests() {
       assert.equal(res.body.data.teams.length, 10);
     }),
 
-    test('POST /api/participants/register performs atomic allocation & serialNo creation', async () => {
+    test('POST /api/participants/register performs atomic allocation & serialNo creation when payment is complete', async () => {
       const res = await request('POST', '/api/participants/register', {
         name: 'Timothy George',
         age: 21,
@@ -87,7 +87,10 @@ async function runApiTests() {
         church: 'ICPF Kollam',
         location: 'Kerala',
         staying: true,
-        phone: '+91 98470 99999'
+        phone: '+91 98470 99999',
+        paymentStatus: 'Paid Cash',
+        amountPaid: 500,
+        feeTotal: 500
       });
       assert.equal(res.status, 201);
       assert.equal(res.body.success, true);
@@ -96,6 +99,37 @@ async function runApiTests() {
       assert.ok(res.body.data.assignedRoom);
       assert.match(res.body.data.assignedRoom, /Male Room/);
       createdParticipantId = res.body.data._id;
+    }),
+
+    test('POST /api/participants/register with Waiting Payment does NOT allocate team or room', async () => {
+      const res = await request('POST', '/api/participants/register', {
+        name: 'Hannah Mathew',
+        age: 20,
+        gender: 'Female',
+        church: 'ICPF Kottayam',
+        staying: true,
+        paymentStatus: 'Waiting Payment',
+        amountPaid: 0,
+        feeTotal: 500
+      });
+      assert.equal(res.status, 201);
+      assert.equal(res.body.success, true);
+      assert.equal(res.body.data.assignedTeam, '');
+      assert.equal(res.body.data.assignedRoom, '');
+
+      // Verify that completing payment later automatically allocates team and room
+      const updateRes = await request('PUT', `/api/participants/${res.body.data._id}`, {
+        paymentStatus: 'Paid Online',
+        amountPaid: 500,
+        balanceDue: 0
+      });
+      assert.equal(updateRes.status, 200);
+      assert.ok(updateRes.body.data.assignedTeam);
+      assert.ok(updateRes.body.data.assignedRoom);
+      assert.match(updateRes.body.data.assignedRoom, /Female Room/);
+
+      // Clean up Hannah
+      await request('DELETE', `/api/participants/${res.body.data._id}`);
     }),
 
     test('POST /api/participants/register validates required input fields', async () => {

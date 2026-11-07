@@ -128,12 +128,18 @@ export default function ParticipantTable({
                       <div className="text-[11px] text-zinc-400 dark:text-slateMuted italic truncate">Note: {p.notes}</div>
                     )}
                   </div>
-                  <span
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-zinc-900 border border-black/10 shadow-2xs shrink-0"
-                    style={{ backgroundColor: teamColor }}
-                  >
-                    {p.assignedTeam || 'Unassigned'}
-                  </span>
+                  {p.assignedTeam ? (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-zinc-900 border border-black/10 shadow-2xs shrink-0"
+                      style={{ backgroundColor: teamColor }}
+                    >
+                      {p.assignedTeam}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                      Pending Payment
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-slateElevated/50 text-xs">
                   <span
@@ -238,12 +244,18 @@ export default function ParticipantTable({
                       <div className="text-[10px] text-zinc-400 dark:text-slateMuted">{p.location || '—'}</div>
                     </td>
                     <td className="py-3 px-4">
-                      <span
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-zinc-900 border border-black/10 shadow-2xs"
-                        style={{ backgroundColor: teamColor }}
-                      >
-                        {p.assignedTeam || 'Unassigned'}
-                      </span>
+                      {p.assignedTeam ? (
+                        <span
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-zinc-900 border border-black/10 shadow-2xs"
+                          style={{ backgroundColor: teamColor }}
+                        >
+                          {p.assignedTeam}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          Pending Payment
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <span className="font-medium text-zinc-800 dark:text-slateFrost block">
