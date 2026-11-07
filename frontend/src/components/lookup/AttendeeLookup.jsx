@@ -37,16 +37,6 @@ export default function AttendeeLookup({
   const [selectedPayment, setSelectedPayment] = useState('ALL');
   const [sortBy, setSortBy] = useState('recent');
 
-  // Lock body scroll when quick edit modal is active
-  useEffect(() => {
-    if (quickEditCamper) {
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = '';
-      };
-    }
-  }, [quickEditCamper]);
-
   // Quick Inline Notes / Payment Edit State
   const [quickEditCamper, setQuickEditCamper] = useState(null);
   const [quickFeeOption, setQuickFeeOption] = useState('500'); // '500' | '400' | 'custom' | '0'
@@ -61,9 +51,19 @@ export default function AttendeeLookup({
   });
   const [isSavingQuick, setIsSavingQuick] = useState(false);
 
+  // Lock body scroll when quick edit modal is active (declared after quickEditCamper state)
+  useEffect(() => {
+    if (quickEditCamper) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [quickEditCamper]);
+
   // Filtered and sorted participants list (defaults to Most Recent first)
   const filteredParticipants = useMemo(() => {
-    const list = participants.filter((p) => {
+    const list = (participants || []).filter((p) => {
       const query = searchTerm.toLowerCase().trim();
       const matchSearch =
         !query ||
