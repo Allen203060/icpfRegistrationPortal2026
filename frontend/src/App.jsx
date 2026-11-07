@@ -139,7 +139,14 @@ export default function App() {
 
   useEffect(() => {
     loadConfig();
-    fetchLiveParticipants();
+    fetchLiveParticipants(false);
+
+    // Auto-update polling: automatically syncs every 3 seconds so desk operators never need to click refresh
+    const pollInterval = setInterval(() => {
+      fetchLiveParticipants(true);
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
   }, []);
 
   const loadConfig = async () => {
@@ -151,17 +158,17 @@ export default function App() {
     }
   };
 
-  const fetchLiveParticipants = async () => {
-    setIsLoading(true);
+  const fetchLiveParticipants = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
-      const res = await getParticipants();
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+      const res = await getParticipants({ limit: 2500 });
+      if (res.data && Array.isArray(res.data)) {
         setParticipants(res.data);
       }
     } catch (err) {
       // Retain existing state if offline
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -324,16 +331,23 @@ export default function App() {
               </button>
             </div>
 
-            {/* Right Controls: Refresh & Day/Night Switcher */}
+            {/* Right Controls: Auto-Sync Badge, Refresh & Day/Night Switcher */}
             <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={fetchLiveParticipants}
-                className="btn-press shrink-0 p-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/70 dark:bg-slateMidnight/70 text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost hover:bg-white dark:hover:bg-slateMidnight transition-colors cursor-pointer"
-                title="Refresh live registrations"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </button>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/70 dark:bg-slateMidnight/70 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" title="Auto-sync active (every 3s)" />
+                <span className="hidden sm:inline text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Live Sync</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    fetchLiveParticipants(false);
+                    toast.success('Synced live attendee data');
+                  }}
+                  className="btn-press p-1 rounded-lg hover:bg-slateElevated/20 dark:hover:bg-slateElevated text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost transition-colors cursor-pointer"
+                  title="Click to force immediate sync"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
 
               {/* Day / Night Segmented Switcher */}
               <div className="flex p-0.5 bg-slateElevated/15 dark:bg-slateMidnight rounded-xl border border-slateMuted/30 dark:border-slateElevated shadow-subtle">

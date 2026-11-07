@@ -364,7 +364,9 @@ async function updateParticipantNotes(req, res, next) {
 async function listParticipants(req, res, next) {
   try {
     const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
-    const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit, 10) || 25));
+    const limit = req.query.limit !== undefined
+      ? Math.min(2500, Math.max(1, Number.parseInt(req.query.limit, 10) || 25))
+      : 2500; // Default to full camp roster (up to 2,500 attendees) so stats & lookups are complete
     const filter = {};
 
     if (req.query.team) filter.assignedTeam = req.query.team;
