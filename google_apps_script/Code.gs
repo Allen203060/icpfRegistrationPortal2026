@@ -79,16 +79,26 @@ function processRow(sheet, rowNumber) {
     return;
   }
 
-  // Extract form inputs with flexible header detection
-  const name = String(getValueByHeader(['full name', 'name', 'camper name', 'participant'])).trim();
-  const ageRaw = getValueByHeader(['age', 'how old']);
+  // Extract form inputs matching your live form (https://forms.gle/bsD3DK5KDs9Lswag9):
+  // 1. Name
+  // 2. Age
+  // 3. Gender (Male / Female)
+  // 4. Student/Professional (Student / Working)
+  // 5. College/School/Others(Studying/Studied at)
+  // 6. Whatsapp Mobile Number
+  // 7. First Time Attending (Yes / No)
+  // 8. Location
+  // 9. Will you stay at night? (Yes / No)
+
+  const name = String(getValueByHeader(['full name', 'name'])).trim();
+  const ageRaw = getValueByHeader(['age']);
   const genderRaw = String(getValueByHeader(['gender', 'sex'])).toLowerCase().trim();
-  const church = String(getValueByHeader(['church', 'parish', 'assembly'])).trim();
-  const location = String(getValueByHeader(['city', 'place', 'location', 'town', 'district'])).trim();
-  const phone = String(getValueByHeader(['phone', 'mobile', 'contact', 'whatsapp'])).trim();
-  const stayingRaw = String(getValueByHeader(['staying', 'residential', 'accommodation', 'hostel'])).toLowerCase().trim();
-  const notes = String(getValueByHeader(['notes', 'medical', 'dietary', 'requests', 'comments'])).trim();
-  const paymentMethodRaw = String(getValueByHeader(['payment', 'fee', 'paid', 'cash', 'online'])).trim();
+  const studentProf = String(getValueByHeader(['student/professional', 'professional', 'working'])).trim();
+  const collegeSchool = String(getValueByHeader(['college/school', 'college', 'school', 'studying', 'church', 'parish'])).trim();
+  const phone = String(getValueByHeader(['whatsapp', 'mobile', 'phone', 'contact'])).trim();
+  const firstTime = String(getValueByHeader(['first time attending', 'first time'])).trim();
+  const location = String(getValueByHeader(['location', 'city', 'place', 'town'])).trim();
+  const stayingRaw = String(getValueByHeader(['stay at night', 'will you stay', 'staying', 'residential'])).toLowerCase().trim();
 
   if (!name) {
     Logger.log('Skipping row ' + rowNumber + ': No name found.');
@@ -97,35 +107,34 @@ function processRow(sheet, rowNumber) {
 
   const age = parseInt(ageRaw, 10) || 18;
   const gender = genderRaw.startsWith('f') ? 'Female' : 'Male';
-  const staying = !(stayingRaw.includes('no') || stayingRaw.includes('day') || stayingRaw === 'false');
+  // Staying at night: "Yes" => true (residential dorm assigned), "No" => false (Day Scholar)
+  const staying = stayingRaw.includes('yes') || stayingRaw.startsWith('y');
   
-  // Payment status mapping
-  let paymentStatus = 'Waiting Payment';
-  let feeTotal = 500;
-  let amountPaid = 0;
+  // Assemble notes from form fields
+  const noteParts = [];
+  if (studentProf) noteParts.push(studentProf);
+  if (firstTime) noteParts.push('First Timer: ' + firstTime);
+  const notes = noteParts.join(' • ');
 
-  if (paymentMethodRaw.toLowerCase().includes('online') || paymentMethodRaw.toLowerCase().includes('upi') || paymentMethodRaw.toLowerCase().includes('gpay')) {
-    paymentStatus = 'Paid Online';
-    amountPaid = 500;
-  } else if (paymentMethodRaw.toLowerCase().includes('cash')) {
-    paymentStatus = 'Paid Cash';
-    amountPaid = 500;
-  }
+  // Standard camp fee preset: ₹500 residential, ₹400 day scholar
+  const feeTotal = staying ? 500 : 400;
+  const paymentStatus = 'Waiting Payment';
+  const amountPaid = 0;
 
   // Payload for Node.js Backend API
   const payload = {
     name: name,
     age: age,
     gender: gender,
-    church: church,
-    location: location,
+    church: collegeSchool || 'General', // Used by 4-tier diversity heuristic to disperse peers
+    location: location || 'Local',
     staying: staying,
     phone: phone,
     notes: notes,
     paymentStatus: paymentStatus,
     feeTotal: feeTotal,
     amountPaid: amountPaid,
-    balanceDue: Math.max(0, feeTotal - amountPaid)
+    balanceDue: feeTotal
   };
 
   Logger.log('Sending registration to backend for: ' + name);
