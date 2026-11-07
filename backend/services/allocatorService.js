@@ -169,7 +169,7 @@ function roomOccupancy(room) {
   return numericCount(room.occupiedCount ?? room.occupancy ?? room.count, 0);
 }
 
-function chooseRoom(candidate, rooms) {
+function chooseRoom(candidate, rooms, options = {}) {
   // Day participants do not consume residential room capacity.
   if (candidate.staying === false) return '';
 
@@ -187,6 +187,9 @@ function chooseRoom(candidate, rooms) {
     .map((room) => ({ room, occupied: roomOccupancy(room) }));
 
   if (matchingRooms.length === 0) {
+    if (options.allowOverflow) {
+      return 'Unassigned (Dorm Full)';
+    }
     throw allocationError(
       `No available ${candidate.gender} room has remaining capacity.`,
       'ROOM_CAPACITY_EXHAUSTED',
@@ -233,9 +236,13 @@ function allocateParticipant(candidate, currentTeams, currentRooms, options = {}
   };
 
   const assignedTeam = chooseTeam(normalizedCandidate, currentTeams, options);
-  const assignedRoom = chooseRoom(normalizedCandidate, currentRooms);
+  const assignedRoom = chooseRoom(normalizedCandidate, currentRooms, options);
 
   return { assignedTeam, assignedRoom };
 }
 
-module.exports = { allocateParticipant };
+module.exports = {
+  allocateParticipant,
+  chooseTeam,
+  chooseRoom
+};

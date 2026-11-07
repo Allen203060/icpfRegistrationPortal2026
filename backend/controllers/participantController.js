@@ -203,7 +203,8 @@ async function registerParticipant(req, res, next) {
         // Immediately allocate team and room irrespective of payment status upon registration
         const allocation = allocateParticipant(participantData, teams, rooms, {
           lastAssignedTeam,
-          requestedTeam: req.body.requestedTeam || req.body.assignedTeam
+          requestedTeam: req.body.requestedTeam || req.body.assignedTeam,
+          allowOverflow: true
         });
 
         const [participant] = await Participant.create([{
@@ -317,7 +318,8 @@ async function registerGroup(req, res, next) {
 
         const allocOptions = {
           requestedTeam: keepTogether ? groupCommonTeam : null,
-          lastAssignedTeam: lastTeam
+          lastAssignedTeam: lastTeam,
+          allowOverflow: true
         };
 
         const allocation = allocateParticipant(participantData, teams, rooms, allocOptions);

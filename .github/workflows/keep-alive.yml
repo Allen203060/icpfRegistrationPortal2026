@@ -32,3 +32,4 @@ jobs:
           else
             echo "⚠️ Backend responded with HTTP ${HTTP_STATUS}. It may have been asleep and is now spinning up."
           fi
+
