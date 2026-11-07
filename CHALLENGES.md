@@ -164,3 +164,13 @@ This journal tracks architectural hurdles, trade-offs, bugs, and key engineering
 - **Solution:** Reordered hook declarations so that all `useState` primitives precede any `useEffect` or `useMemo` hooks consuming them, and added defensive fallback `(participants || []).filter(...)` to guard against null lists.
 - **Key Takeaway (Interview Insight):** *Hook Top-to-Bottom Evaluation & Lexical Scoping*: React function components are standard JavaScript functions re-executed on every render. Hooks are subject to identical JavaScript lexical scoping and Temporal Dead Zone constraints; state variables must always be initialized lexically before any effect or memoization array reads them.
 
+---
+
+### Challenge 18: Malformed Tailwind Utility Class Fallback & Dynamic Age Tiering
+- **The Problem:** In Dark Mode, the "Payment & Dues Information" section inside `OverrideModal.jsx` rendered with an unintended bright white box, causing extreme contrast inversion and unreadable label text. Simultaneously, camp leadership instituted a dual-tier fee policy (₹400 for students aged 13–24, ₹500 for seniors aged 25+) that required automated detection during single/group intake and lookup modals.
+- **Root Cause:** A typo in Tailwind opacity syntax (`dark:bg-slateMidnight/70/50`) failed CSS parser compilation and was discarded by the browser, causing the element to fall back to the light-mode class `bg-white/70` even when the `.dark` class was active.
+- **Solution:** 
+  1. Corrected the modal's internal background to valid Tailwind tokens `bg-slate-50/80 dark:bg-slateMidnight/90` with high-contrast text labels.
+  2. Implemented `getRegistrationFeeByAge` utility across backend controllers (`participantController.js`) and frontend forms (`CheckinForm.jsx`, `AttendeeLookup.jsx`, `OverrideModal.jsx`), automatically binding ₹400 for campers aged 13–24 and ₹500 for ages 25+, with reactive calculation on age field input.
+- **Key Takeaway (Interview Insight):** *CSS Token Syntactic Integrity & Domain-Driven Pricing Rules*: Malformed utility classes silently degrade to preceding cascade rules rather than throwing runtime errors. Pairing automated age-tier defaults with strict CSS validation ensures high visual polish and eliminates manual cashier arithmetic at the check-in desk.
+

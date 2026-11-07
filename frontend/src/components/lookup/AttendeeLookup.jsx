@@ -136,9 +136,10 @@ export default function AttendeeLookup({
 
   const openQuickEdit = (camper) => {
     setQuickEditCamper(camper);
-    const fee = camper.feeTotal ?? 500;
+    const defaultByAge = (camper.age && Number(camper.age) >= 25) ? 500 : 400;
+    const fee = camper.feeTotal !== undefined && camper.feeTotal !== null ? camper.feeTotal : defaultByAge;
     const paid = camper.amountPaid ?? 0;
-    const option = fee === 500 ? '500' : fee === 400 ? '400' : fee === 0 ? '0' : 'custom';
+    const option = fee === 400 ? '400' : fee === 500 ? '500' : fee === 0 ? '0' : 'custom';
     setQuickFeeOption(option);
     setQuickForm({
       notes: camper.notes || '',
@@ -764,8 +765,8 @@ export default function AttendeeLookup({
                     onChange={(e) => handleQuickFeeOptionChange(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs font-medium focus:ring-2 focus:ring-slateSteel"
                   >
-                    <option value="500">₹500 (Standard)</option>
-                    <option value="400">₹400 (Concession)</option>
+                    <option value="400">₹400 (Student: 13–24 yrs)</option>
+                    <option value="500">₹500 (Senior: 25+ yrs)</option>
                     <option value="custom">Custom Fee...</option>
                     <option value="0">₹0 (Exempt)</option>
                   </select>

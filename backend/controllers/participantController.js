@@ -45,6 +45,17 @@ function isPaymentComplete(status, balanceDue, feeTotal, amountPaid) {
   return false;
 }
 
+/**
+ * ICPF Camp 2026 Fee Schedule:
+ * - Students (13–24 yrs): ₹400
+ * - Seniors (25+ yrs): ₹500
+ */
+function getRegistrationFeeByAge(age) {
+  const num = Number(age);
+  if (!num || isNaN(num)) return 400; // default student rate
+  return num >= 25 ? 500 : 400;
+}
+
 async function allocateIfEligible(participant, config, session = null) {
   // If already allocated a team, do not reallocate
   if (participant.assignedTeam && participant.assignedTeam.trim()) {
@@ -157,20 +168,33 @@ async function registerParticipant(req, res, next) {
         const lastParticipant = existing.length > 0 ? existing[existing.length - 1] : null;
         const lastAssignedTeam = lastParticipant ? lastParticipant.assignedTeam : null;
 
+        const ageNum = Number(req.body.age);
+        const defaultFee = getRegistrationFeeByAge(ageNum);
+        const feeTotal = (req.body.feeTotal !== undefined && req.body.feeTotal !== null && req.body.feeTotal !== '')
+          ? Number(req.body.feeTotal)
+          : defaultFee;
+        const paymentStatus = req.body.paymentStatus || 'Waiting Payment';
+        let amountPaid = Number(req.body.amountPaid || 0);
+        if ((paymentStatus === 'Paid Online' || paymentStatus === 'Paid Cash') && req.body.amountPaid === undefined) {
+          amountPaid = feeTotal;
+        }
+        const balanceDue = req.body.balanceDue !== undefined ? Number(req.body.balanceDue) : Math.max(0, feeTotal - amountPaid);
+        const balanceToReturn = req.body.balanceToReturn !== undefined ? Number(req.body.balanceToReturn) : Math.max(0, amountPaid - feeTotal);
+
         const participantData = {
           name: req.body.name.trim(),
-          age: Number(req.body.age),
+          age: ageNum,
           gender: req.body.gender,
           church: req.body.church || '',
           location: req.body.location || '',
           staying: req.body.staying !== false,
           phone: req.body.phone || '',
           notes: req.body.notes || '',
-          paymentStatus: req.body.paymentStatus || 'Waiting Payment',
-          amountPaid: Number(req.body.amountPaid || 0),
-          feeTotal: Number(req.body.feeTotal || 0),
-          balanceDue: Number(req.body.balanceDue || 0),
-          balanceToReturn: Number(req.body.balanceToReturn || 0),
+          paymentStatus,
+          amountPaid,
+          feeTotal,
+          balanceDue,
+          balanceToReturn,
           paymentNotes: req.body.paymentNotes || '',
           registeredBy: req.body.registeredBy || '',
           groupRegistrationId: req.body.groupRegistrationId || ''
@@ -258,6 +282,8 @@ async function registerGroup(req, res, next) {
       let groupCommonTeam = null;
       let lastTeam = existing.length > 0 ? existing[existing.length - 1].assignedTeam : null;
 
+      const calculatedGroupFee = feeTotal > 0 ? feeTotal : members.reduce((sum, mem) => sum + getRegistrationFeeByAge(mem.age), 0);
+
       for (let i = 0; i < members.length; i++) {
         const m = members[i];
         if (!m.name || !m.name.trim()) {
@@ -267,6 +293,8 @@ async function registerGroup(req, res, next) {
         if (!Number.isInteger(age) || age < 1) {
           throw createHttpError(`Member "${m.name}" has an invalid age.`, 'INVALID_AGE', 400);
         }
+
+        const memberFee = Number(m.feeTotal ?? getRegistrationFeeByAge(age));
 
         const participantData = {
           name: m.name.trim(),
@@ -281,7 +309,7 @@ async function registerGroup(req, res, next) {
           groupRegistrationId,
           paymentStatus: m.paymentStatus || paymentStatus,
           amountPaid: Number(m.amountPaid ?? (i === 0 ? amountPaid : 0)),
-          feeTotal: Number(m.feeTotal ?? (i === 0 ? feeTotal : 0)),
+          feeTotal: Number(m.feeTotal ?? (i === 0 ? calculatedGroupFee : memberFee)),
           balanceDue: Number(m.balanceDue ?? (i === 0 ? balanceDue : 0)),
           balanceToReturn: Number(m.balanceToReturn ?? (i === 0 ? balanceToReturn : 0)),
           paymentNotes: m.paymentNotes || (i === 0 ? paymentNotes : '')

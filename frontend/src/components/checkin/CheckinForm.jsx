@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { registerParticipant, registerGroup } from '../../services/api';
 
-const DEFAULT_FEE_PER_PERSON = 500;
+const DEFAULT_FEE_PER_PERSON = 400;
 
 const INITIAL_SINGLE_FORM = {
   name: '',
@@ -96,6 +96,28 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
         ...prev,
         [name]: type === 'checkbox' ? checked : value
       };
+
+      // Auto compute age-based fee schedule: Students (13-24 yrs): ₹400, Seniors (25+ yrs): ₹500
+      if (name === 'age') {
+        const numAge = Number(value);
+        if (numAge && !isNaN(numAge)) {
+          const autoFee = numAge >= 25 ? 500 : 400;
+          setSingleFeeOption(String(autoFee));
+          next.feeTotal = autoFee;
+          if (next.paymentStatus === 'Paid Cash' || next.paymentStatus === 'Paid Online') {
+            next.amountPaid = autoFee;
+            next.balanceDue = 0;
+            next.balanceToReturn = 0;
+          } else if (next.paymentStatus === 'Waiting Payment') {
+            next.amountPaid = 0;
+            next.balanceDue = autoFee;
+            next.balanceToReturn = 0;
+          } else {
+            next.balanceDue = Math.max(0, autoFee - next.amountPaid);
+            next.balanceToReturn = Math.max(0, next.amountPaid - autoFee);
+          }
+        }
+      }
 
       // Auto compute balances when fee or amount changes
       if (name === 'feeTotal' || name === 'amountPaid') {
@@ -861,8 +883,8 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                     onChange={(e) => handleSingleFeeOptionChange(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost text-xs font-medium focus:ring-2 focus:ring-sky-500"
                   >
-                    <option value="500">₹500 (Standard Camp Fee)</option>
-                    <option value="400">₹400 (Concession / Early)</option>
+                    <option value="400">₹400 (Student: 13–24 yrs)</option>
+                    <option value="500">₹500 (Senior: 25+ yrs)</option>
                     <option value="custom">Custom Fee Amount...</option>
                     <option value="0">₹0 (Exempt / Sponsored)</option>
                   </select>
@@ -1129,8 +1151,8 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                     onChange={(e) => handleGroupFeeOptionChange(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost text-xs font-medium"
                   >
-                    <option value="500">₹500 / attendee ({members.length * 500})</option>
-                    <option value="400">₹400 / attendee ({members.length * 400})</option>
+                    <option value="400">₹400 / student ({members.length * 400})</option>
+                    <option value="500">₹500 / senior ({members.length * 500})</option>
                     <option value="custom">Custom Group Total...</option>
                     <option value="0">₹0 (Free / Exempt)</option>
                   </select>

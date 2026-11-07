@@ -32,11 +32,12 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
     setStaying(participant.staying !== false);
     setNotes(participant.notes || '');
     setPaymentStatus(participant.paymentStatus || 'Waiting Payment');
-    const fee = participant.feeTotal ?? 500;
+    const defaultByAge = (participant.age && Number(participant.age) >= 25) ? 500 : 400;
+    const fee = participant.feeTotal !== undefined && participant.feeTotal !== null ? participant.feeTotal : defaultByAge;
     setFeeTotal(fee);
-    setFeeOption(fee === 500 ? '500' : fee === 400 ? '400' : fee === 0 ? '0' : 'custom');
+    setFeeOption(fee === 400 ? '400' : fee === 500 ? '500' : fee === 0 ? '0' : 'custom');
     setAmountPaid(participant.amountPaid ?? 0);
-    setBalanceDue(participant.balanceDue ?? 0);
+    setBalanceDue(participant.balanceDue ?? Math.max(0, fee - (participant.amountPaid ?? 0)));
     setBalanceToReturn(participant.balanceToReturn ?? 0);
     setPaymentNotes(participant.paymentNotes || '');
   }, [participant]);
@@ -197,21 +198,21 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
           </div>
 
           {/* Payment Section */}
-          <div className="p-4 rounded-xl bg-white/70 dark:bg-slateMidnight/70/50 border border-slateMuted/30 dark:border-slateElevated/80 space-y-3">
+          <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slateMidnight/90 border border-slateMuted/30 dark:border-slateElevated space-y-3">
             <span className="text-xs font-bold text-slateVoid dark:text-slateFrost flex items-center gap-1.5">
-              <Wallet className="w-4 h-4 text-emerald-600" />
+              <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Payment & Dues Information
             </span>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateMuted block">
+                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateFrost/80 block">
                   Status
                 </label>
                 <select
                   value={paymentStatus}
                   onChange={(e) => handleStatusChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost text-xs font-medium"
+                  className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs font-medium focus:ring-2 focus:ring-sky-500"
                 >
                   <option value="Paid Cash">Paid Cash</option>
                   <option value="Paid Online">Paid Online</option>
@@ -222,23 +223,23 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateMuted block">
+                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateFrost/80 block">
                   Fee Rate Option
                 </label>
                 <select
                   value={feeOption}
                   onChange={(e) => handleFeeOptionChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost text-xs font-medium"
+                  className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs font-medium focus:ring-2 focus:ring-sky-500"
                 >
-                  <option value="500">₹500 (Standard)</option>
-                  <option value="400">₹400 (Concession)</option>
+                  <option value="400">₹400 (Student: 13–24 yrs)</option>
+                  <option value="500">₹500 (Senior: 25+ yrs)</option>
                   <option value="custom">Custom Fee Amount...</option>
                   <option value="0">₹0 (Exempt)</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateMuted block">
+                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateFrost/80 block">
                   {feeOption === 'custom' ? 'Custom Fee / Paid (₹)' : 'Amount Paid (₹)'}
                 </label>
                 <div className="flex gap-2">
@@ -250,7 +251,7 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
                       placeholder="Fee"
                       min="0"
                       title="Custom Fee Total"
-                      className="w-1/2 px-2.5 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost text-xs"
+                      className="w-1/2 px-2.5 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs"
                     />
                   )}
                   <input
@@ -260,22 +261,22 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
                     placeholder="Paid"
                     min="0"
                     title="Amount Paid"
-                    className={`${feeOption === 'custom' ? 'w-1/2' : 'w-full'} px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost text-xs`}
+                    className={`${feeOption === 'custom' ? 'w-1/2' : 'w-full'} px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs`}
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateMuted block">
+                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateFrost/80 block">
                   Balance Due (₹)
                 </label>
-                <div className="px-3 py-2 rounded-xl bg-slateElevated/15 dark:bg-slateElevated/50 text-xs font-bold text-rose-600 dark:text-rose-400">
+                <div className="px-3 py-2 rounded-xl bg-slateElevated/15 dark:bg-slateElevated/60 text-xs font-bold text-rose-600 dark:text-rose-400 font-mono">
                   ₹{balanceDue}
                 </div>
               </div>
 
               <div className="sm:col-span-2 space-y-1">
-                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateMuted block">
+                <label className="text-[11px] font-semibold text-slateSteel dark:text-slateFrost/80 block">
                   Payment Reference / Note
                 </label>
                 <input

@@ -10,64 +10,52 @@ const defaultCampConfig = {
   active: true,
   teams: [
     {
-      name: 'Group A',
+      name: 'Group 1',
       themeColor: '#38BDF8', // Sky Blue
-      targetCapacity: 25,
-      description: 'Group A'
+      targetCapacity: 30,
+      description: 'Group 1'
     },
     {
-      name: 'Group B',
+      name: 'Group 2',
       themeColor: '#F472B6', // Rose Pink
-      targetCapacity: 25,
-      description: 'Group B'
+      targetCapacity: 30,
+      description: 'Group 2'
     },
     {
-      name: 'Group C',
+      name: 'Group 3',
       themeColor: '#FACC15', // Amber Yellow
-      targetCapacity: 25,
-      description: 'Group C'
+      targetCapacity: 30,
+      description: 'Group 3'
     },
     {
-      name: 'Group D',
+      name: 'Group 4',
       themeColor: '#A78BFA', // Violet
-      targetCapacity: 25,
-      description: 'Group D'
+      targetCapacity: 30,
+      description: 'Group 4'
     },
     {
-      name: 'Group E',
+      name: 'Group 5',
       themeColor: '#34D399', // Emerald Mint
-      targetCapacity: 25,
-      description: 'Group E'
+      targetCapacity: 30,
+      description: 'Group 5'
     },
     {
-      name: 'Group F',
+      name: 'Group 6',
       themeColor: '#FB923C', // Tangerine Orange
-      targetCapacity: 25,
-      description: 'Group F'
+      targetCapacity: 30,
+      description: 'Group 6'
     },
     {
-      name: 'Group G',
+      name: 'Group 7',
       themeColor: '#2DD4BF', // Vibrant Teal
-      targetCapacity: 25,
-      description: 'Group G'
+      targetCapacity: 30,
+      description: 'Group 7'
     },
     {
-      name: 'Group H',
+      name: 'Group 8',
       themeColor: '#A3E635', // Fresh Lime
-      targetCapacity: 25,
-      description: 'Group H'
-    },
-    {
-      name: 'Group I',
-      themeColor: '#818CF8', // Indigo
-      targetCapacity: 25,
-      description: 'Group I'
-    },
-    {
-      name: 'Group J',
-      themeColor: '#F87171', // Coral Red
-      targetCapacity: 25,
-      description: 'Group J'
+      targetCapacity: 30,
+      description: 'Group 8'
     }
   ],
   rooms: [
