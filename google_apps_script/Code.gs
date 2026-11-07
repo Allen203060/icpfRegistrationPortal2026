@@ -21,18 +21,23 @@
  */
 
 // 🌐 CONFIGURE YOUR BACKEND URL HERE:
-const BACKEND_URL = 'http://localhost:5000'; // Replace with your public URL, e.g. https://your-app.loca.lt or https://api.mycamp.org
+const BACKEND_URL = 'https://icpfregistrationportal2026.onrender.com';
 
 /**
  * Custom Menu inside Google Sheets for easy manual operations
  */
 function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu('ICPF Camp Tools')
-    .addItem('⚡ Sync Unprocessed Registrations', 'syncAllUnprocessedRows')
-    .addItem('🏥 Check Backend API Health', 'checkBackendHealth')
-    .addItem('📋 Prepare Output Columns (Group, Room, Badge)', 'prepareOutputColumns')
-    .addToUi();
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('ICPF Camp Tools')
+      .addItem('⚡ Sync Unprocessed Registrations', 'syncAllUnprocessedRows')
+      .addItem('🏥 Check Backend API Health', 'checkBackendHealth')
+      .addItem('⏰ Run Keep-Alive Ping', 'keepAliveAndCatchUpCron')
+      .addItem('📋 Prepare Output Columns (Group, Room, Badge)', 'prepareOutputColumns')
+      .addToUi();
+  } catch (e) {
+    // Suppress if running in headless context
+  }
 }
 
 /**
@@ -227,7 +232,11 @@ function syncAllUnprocessedRows() {
 
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
-    SpreadsheetApp.getUi().alert('No submission rows found in this sheet.');
+    try {
+      SpreadsheetApp.getUi().alert('No submission rows found in this sheet.');
+    } catch (e) {
+      Logger.log('No submission rows found.');
+    }
     return;
   }
 
@@ -238,15 +247,58 @@ function syncAllUnprocessedRows() {
     Utilities.sleep(100); // 100ms throttle between calls
   }
 
-  SpreadsheetApp.getUi().alert('Synced ' + count + ' rows with the ICPF Registration Backend!');
+  try {
+    SpreadsheetApp.getUi().alert('Synced ' + count + ' rows with the ICPF Registration Backend!');
+  } catch (e) {
+    Logger.log('Synced ' + count + ' rows with the ICPF Registration Backend.');
+  }
+}
+
+/**
+ * ⏰ KEEP-ALIVE & CATCH-UP CRON TRIGGER:
+ * Prevents Render from going to sleep (which spins down after 15 mins of inactivity on free tier).
+ * Pings every ~10 to 14 mins with random jitter (0-60s) to simulate organic traffic.
+ * If backend is healthy, it also automatically checks the sheet for any unallocated rows
+ * and syncs them directly into the backend!
+ *
+ * HOW TO ATTACH IN APPS SCRIPT:
+ * 1. Left sidebar > Triggers (Clock Icon) > "+ Add Trigger"
+ * 2. Function: keepAliveAndCatchUpCron
+ * 3. Event source: Time-driven
+ * 4. Type: Minutes timer > Every 10 minutes (or 15 minutes)
+ * 5. Save!
+ */
+function keepAliveAndCatchUpCron() {
+  try {
+    // Random jitter between 0 and 50 seconds to vary ping timing
+    const jitterMs = Math.floor(Math.random() * 50000);
+    Utilities.sleep(jitterMs);
+
+    Logger.log('⏰ Keep-Alive Ping to: ' + BACKEND_URL + '/api/health');
+    const res = UrlFetchApp.fetch(BACKEND_URL + '/api/health', {
+      muteHttpExceptions: true
+    });
+    const code = res.getResponseCode();
+    Logger.log('Backend response code: ' + code);
+
+    // If backend is active (HTTP 200), auto-catchup any unallocated rows in the sheet
+    if (code === 200) {
+      const sheet = SpreadsheetApp.getActiveSheet();
+      if (sheet) {
+        syncAllUnprocessedRows();
+      }
+    }
+  } catch (err) {
+    Logger.log('Keep-alive ping error: ' + err.toString());
+  }
 }
 
 /**
  * Health Check test function
  */
 function checkBackendHealth() {
-  const ui = SpreadsheetApp.getUi();
   try {
+    const ui = SpreadsheetApp.getUi();
     const res = UrlFetchApp.fetch(BACKEND_URL + '/api/health', { muteHttpExceptions: true });
     if (res.getResponseCode() === 200) {
       ui.alert('🟢 Backend is Healthy & Connected!\n\nResponse: ' + res.getContentText());
@@ -254,7 +306,11 @@ function checkBackendHealth() {
       ui.alert('⚠️ Backend returned HTTP ' + res.getResponseCode() + ':\n' + res.getContentText());
     }
   } catch (err) {
-    ui.alert('🔴 Connection Failed!\n\nMake sure your BACKEND_URL is publicly reachable.\nError: ' + err.message);
+    try {
+      SpreadsheetApp.getUi().alert('🔴 Connection Failed!\n\nError: ' + err.message);
+    } catch (e) {
+      Logger.log('Connection failed: ' + err.message);
+    }
   }
 }
 

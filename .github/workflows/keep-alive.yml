@@ -1,0 +1,34 @@
+name: Render Backend Keep-Alive
+
+on:
+  schedule:
+    # Runs every 14 minutes across the clock (Render free tier sleeps after 15m)
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    name: Ping Render Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Jitter & Ping Backend
+        run: |
+          # Introduce random jitter between 5 and 55 seconds to prevent static traffic patterns
+          SLEEP_SECS=$(( 5 + RANDOM % 50 ))
+          echo "Applying random jitter delay of ${SLEEP_SECS}s..."
+          sleep ${SLEEP_SECS}
+
+          TARGET_URL="https://icpfregistrationportal2026.onrender.com/api/health"
+          echo "Pinging ${TARGET_URL} at $(date -u)..."
+
+          # Perform HTTP ping with up to 45s timeout to allow cold-start recovery if asleep
+          HTTP_STATUS=$(curl -s -o /tmp/health_response.json -w "%{http_code}" --max-time 45 "${TARGET_URL}")
+          echo "HTTP Response Code: ${HTTP_STATUS}"
+          cat /tmp/health_response.json || true
+          echo ""
+
+          if [ "${HTTP_STATUS}" -eq 200 ]; then
+            echo "✅ Render backend is awake, healthy, and responsive!"
+          else
+            echo "⚠️ Backend responded with HTTP ${HTTP_STATUS}. It may have been asleep and is now spinning up."
+          fi
