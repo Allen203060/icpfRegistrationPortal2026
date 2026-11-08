@@ -106,11 +106,8 @@ function chooseTeam(candidate, teams, options = {}) {
   let available = allTeams.filter((entry) => !entry.full);
 
   if (available.length === 0) {
-    if (options.allowOverflow) {
-      available = allTeams;
-    } else {
-      throw allocationError('All configured teams have reached capacity.', 'TEAM_CAPACITY_EXHAUSTED', 409);
-    }
+    // If all configured teams have reached target capacity, allocate into least populated team regardless
+    available = allTeams;
   }
 
   // Explicit Override: If user requested a specific team (e.g. Group Registration "Keep Together")
@@ -178,8 +175,8 @@ function chooseRoom(candidate, rooms, options = {}) {
   // Day participants do not consume residential room capacity.
   if (candidate.staying === false) return '';
 
-  if (!Array.isArray(rooms)) {
-    throw allocationError('Room configuration is unavailable.', 'ROOMS_UNAVAILABLE', 503);
+  if (!Array.isArray(rooms) || rooms.length === 0) {
+    return 'Unassigned (No Rooms Configured)';
   }
 
   // Find all rooms matching the candidate's gender (strict invariant #1: Absolute Gender Segregation)
@@ -195,14 +192,7 @@ function chooseRoom(candidate, rooms, options = {}) {
     }));
 
   if (allMatchingGenderRooms.length === 0) {
-    if (options.allowOverflow) {
-      return 'Unassigned (Dorm Full)';
-    }
-    throw allocationError(
-      `No available ${candidate.gender} room has remaining capacity.`,
-      'ROOM_CAPACITY_EXHAUSTED',
-      409
-    );
+    return 'Unassigned (No Rooms Configured)';
   }
 
   // Explicit Room Override if specified and matches gender
@@ -227,24 +217,17 @@ function chooseRoom(candidate, rooms, options = {}) {
     return availableRooms[0].room.name.trim();
   }
 
-  // 2. Capacity reached across all rooms for this gender:
-  // If overflow is allowed, allocate to the gender-matched room with the lowest occupancy
-  // to evenly distribute bed overflow across dorms while strictly maintaining gender segregation!
-  if (options.allowOverflow) {
-    if (options.overflowTarget === 'unassigned') {
-      return 'Unassigned (Dorm Full)';
-    }
-    allMatchingGenderRooms.sort((a, b) =>
-      a.occupied - b.occupied || compareNames(a.room.name, b.room.name)
-    );
-    return allMatchingGenderRooms[0].room.name.trim();
+  // 2. ALL ROOMS FOR THIS GENDER ARE FULL:
+  // Allocate them regardless into the matching-gender room with lowest occupancy!
+  // This balances bed overflow across dorms while strictly maintaining gender segregation.
+  if (options.overflowTarget === 'unassigned') {
+    return 'Unassigned (Dorm Full)';
   }
 
-  throw allocationError(
-    `No available ${candidate.gender} room has remaining capacity.`,
-    'ROOM_CAPACITY_EXHAUSTED',
-    409
+  allMatchingGenderRooms.sort((a, b) =>
+    a.occupied - b.occupied || compareNames(a.room.name, b.room.name)
   );
+  return allMatchingGenderRooms[0].room.name.trim();
 }
 
 /**

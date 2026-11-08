@@ -78,8 +78,11 @@ function processRow(sheet, rowNumber) {
   prepareOutputColumns(sheet);
 
   // Check if already allocated to prevent double submission
-  const currentGroup = getValueByHeader(['assigned group', 'group name', 'team']);
-  if (currentGroup && String(currentGroup).trim() !== '') {
+  const currentGroup = String(getValueByHeader(['assigned group', 'group name', 'team']) || '').trim();
+  const currentStatus = String(getValueByHeader(['allocation status', 'status']) || '').trim();
+
+  // If already successfully allocated (and not an ERROR/FAILED row), skip
+  if (currentGroup !== '' && currentGroup !== 'ERROR' && !currentStatus.includes('FAILED') && !currentStatus.includes('ERROR')) {
     Logger.log('Row ' + rowNumber + ' already allocated: ' + currentGroup);
     return;
   }
@@ -121,10 +124,11 @@ function processRow(sheet, rowNumber) {
   if (firstTime) noteParts.push('First Timer: ' + firstTime);
   const notes = noteParts.join(' • ');
 
-  // Standard camp fee preset: ₹500 residential, ₹400 day scholar
-  const feeTotal = staying ? 500 : 400;
+  // Standard camp fee preset: ₹400 for age 13-24, ₹500 for age 25+
+  const feeTotal = age >= 25 ? 500 : 400;
   const paymentStatus = 'Waiting Payment';
   const amountPaid = 0;
+  const isFirstTimer = firstTime.toLowerCase().includes('yes');
 
   // Payload for Node.js Backend API
   const payload = {
@@ -136,6 +140,7 @@ function processRow(sheet, rowNumber) {
     staying: staying,
     phone: phone,
     notes: notes,
+    isFirstTimer: isFirstTimer,
     paymentStatus: paymentStatus,
     feeTotal: feeTotal,
     amountPaid: amountPaid,
@@ -151,9 +156,26 @@ function processRow(sheet, rowNumber) {
     muteHttpExceptions: true
   };
 
-  const response = UrlFetchApp.fetch(BACKEND_URL + '/api/participants/register', options);
-  const responseCode = response.getResponseCode();
-  const responseBody = JSON.parse(response.getContentText());
+  let response = UrlFetchApp.fetch(BACKEND_URL + '/api/participants/register', options);
+  let responseCode = response.getResponseCode();
+  let responseBody = {};
+  try {
+    responseBody = JSON.parse(response.getContentText());
+  } catch (e) {
+    responseBody = {};
+  }
+
+  // Automatic retry if Render is in cold-start wake-up mode
+  if (responseCode >= 500 || responseCode === 0) {
+    Utilities.sleep(3000);
+    response = UrlFetchApp.fetch(BACKEND_URL + '/api/participants/register', options);
+    responseCode = response.getResponseCode();
+    try {
+      responseBody = JSON.parse(response.getContentText());
+    } catch (e) {
+      responseBody = {};
+    }
+  }
 
   if (responseCode === 201 && responseBody.success) {
     const allocated = responseBody.data;

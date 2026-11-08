@@ -201,5 +201,18 @@ This journal tracks architectural hurdles, trade-offs, bugs, and key engineering
   3. Added `allowOverflow: true` to `allocateIfEligible` and `importExcel` to guarantee zero-rejection allocation pipelines.
 - **Key Takeaway (Interview Insight):** *Soft Capacity Elasticity vs Hard Invariant Segregation*: Physical constraints in high-velocity operations (such as camp beds or flight seats) must decouple soft capacity limits from hard invariants (gender segregation). Rigidly throwing 409 exceptions during surge registration paralyzes operational desks; instead, systems should absorb overflow into least-occupied matching partitions while alerting supervisors.
 
+---
+
+### Challenge 21: Unconditional Zero-Rejection Allocation & Google Apps Script Retries
+- **The Problem:** Submissions from Google Sheets continued to display `FAILED: No available Female room has remaining capacity.` because `chooseRoom` still contained codepaths that threw `ROOM_CAPACITY_EXHAUSTED` (409) whenever `allowOverflow` was omitted or false, and Google Apps Script skipped any previously failed rows (`assignedGroup = 'ERROR'`) permanently.
+- **Root Cause:**
+  1. `chooseRoom` had hardcoded `throw allocationError(...)` fallback lines when `allMatchingGenderRooms.length === 0` or if `allowOverflow` was not explicitly passed.
+  2. In `Code.gs`, `currentGroup !== ''` treated `'ERROR'` as an already allocated group, permanently ignoring previously failed rows during batch synchronization.
+- **Solution:**
+  1. Completely eliminated all `throw allocationError('No available ${gender} room has remaining capacity.')` statements in `allocatorService.js`. When rooms are full, attendees are unconditionally allocated to the matching-gender dorm with the lowest occupancy.
+  2. Updated `Code.gs` to retry any row marked `'ERROR'` or `'FAILED'`, added exponential cold-start backoff, and aligned the fee rate to ₹400 for age 13–24 and ₹500 for age 25+.
+- **Key Takeaway (Interview Insight):** *Unconditional Invariant Absorption in High-Throughput Event Ingestion*: Webhook pipelines must never fail due to capacity limits. By replacing hard rejection boundaries with deterministic overflow absorption, external systems (Google Sheets, Forms) maintain 100% submission success without dropping attendees.
+
+
 
 

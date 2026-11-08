@@ -158,22 +158,18 @@ test('Invariant #1: Males are NEVER placed in Female rooms, and vice versa', () 
   assert.equal(femaleRes.assignedRoom, 'Female Room 1');
 });
 
-// Test 7: Room Capacity Ceiling & Exhaustion
-test('Room Capacity: Rejects allocation when room capacity is exhausted', () => {
+// Test 7: Room Capacity Overflow (Allocate Regardless)
+test('Room Capacity: Allocates to matching gender room with lowest occupancy when rooms are full', () => {
   const rooms = [
     { name: 'Male Room Small', gender: 'Male', capacity: 1, occupants: [{ name: 'Existing' }] }
   ];
 
-  assert.throws(
-    () => {
-      allocateParticipant(
-        { name: 'Overflow Boy', age: 19, gender: 'Male', staying: true },
-        sampleTeams,
-        rooms
-      );
-    },
-    (err) => err.code === 'ROOM_CAPACITY_EXHAUSTED'
+  const res = allocateParticipant(
+    { name: 'Overflow Boy', age: 19, gender: 'Male', staying: true },
+    sampleTeams,
+    rooms
   );
+  assert.equal(res.assignedRoom, 'Male Room Small');
 });
 
 // Test 8: Day Scholars consume zero room capacity
