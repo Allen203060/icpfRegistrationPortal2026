@@ -28,6 +28,7 @@ export default function DashboardStats({ participants = [], campConfig = null })
   const [selectedTeamModal, setSelectedTeamModal] = useState(null);
   const [teamMemberSearch, setTeamMemberSearch] = useState('');
   const [chartViewMode, setChartViewMode] = useState('all'); // 'all' | 'males' | 'females'
+  const [genderLodgingFilter, setGenderLodgingFilter] = useState('all'); // 'all' | 'staying' | 'day'
 
   // Core metrics calculation
   const total = participants.length;
@@ -35,6 +36,36 @@ export default function DashboardStats({ participants = [], campConfig = null })
   const females = participants.filter((p) => p.gender === 'Female').length;
   const staying = participants.filter((p) => p.staying !== false).length;
   const dayScholars = total - staying;
+
+  // Gender-segregated residential staying vs day scholar counts
+  const stayingMales = participants.filter((p) => p.gender === 'Male' && p.staying !== false).length;
+  const nonStayingMales = participants.filter((p) => p.gender === 'Male' && p.staying === false).length;
+  const stayingFemales = participants.filter((p) => p.gender === 'Female' && p.staying !== false).length;
+  const nonStayingFemales = participants.filter((p) => p.gender === 'Female' && p.staying === false).length;
+
+  const stayingMalePercent = males > 0 ? Math.round((stayingMales / males) * 100) : 0;
+  const nonStayingMalePercent = males > 0 ? 100 - stayingMalePercent : 0;
+
+  const stayingFemalePercent = females > 0 ? Math.round((stayingFemales / females) * 100) : 0;
+  const nonStayingFemalePercent = females > 0 ? 100 - stayingFemalePercent : 0;
+
+  const displayedMales =
+    genderLodgingFilter === 'staying'
+      ? stayingMales
+      : genderLodgingFilter === 'day'
+      ? nonStayingMales
+      : males;
+
+  const displayedFemales =
+    genderLodgingFilter === 'staying'
+      ? stayingFemales
+      : genderLodgingFilter === 'day'
+      ? nonStayingFemales
+      : females;
+
+  const displayedTotal = displayedMales + displayedFemales;
+  const displayedMalePct = displayedTotal > 0 ? Math.round((displayedMales / displayedTotal) * 100) : 50;
+  const displayedFemalePct = displayedTotal > 0 ? 100 - displayedMalePct : 50;
 
   const isFirstTimerCamper = (p) =>
     p.isFirstTimer === true ||
@@ -300,33 +331,87 @@ export default function DashboardStats({ participants = [], campConfig = null })
           </div>
         </div>
 
-        {/* KPI 3: Gender Parity Spectrum */}
+        {/* KPI 3: Gender Parity Spectrum (with Staying vs Day Filter) */}
         <div className="bg-white dark:bg-slateMidnight rounded-2xl p-4 sm:p-5 border border-slateMuted/30 dark:border-slateElevated shadow-card-light dark:shadow-card-dark flex flex-col justify-between transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slateSteel dark:text-slateMuted">
-              Gender Parity
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slateSteel dark:text-slateMuted truncate">
+              {genderLodgingFilter === 'all'
+                ? 'Gender Parity'
+                : genderLodgingFilter === 'staying'
+                ? 'Staying in Dorms'
+                : 'Day Scholars'}
             </span>
-            <span className="text-[11px] font-mono font-bold text-slateVoid dark:text-slateFrost">
-              {males}M : {females}F
+            <div className="flex items-center gap-0.5 bg-slateElevated/20 dark:bg-slateElevated p-0.5 rounded-lg text-[9px] font-bold shrink-0">
+              <button
+                type="button"
+                onClick={() => setGenderLodgingFilter('all')}
+                className={`px-1.5 py-0.5 rounded transition-all ${
+                  genderLodgingFilter === 'all'
+                    ? 'bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost shadow-xs'
+                    : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
+                }`}
+                title="All attendees"
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setGenderLodgingFilter('staying')}
+                className={`px-1.5 py-0.5 rounded transition-all ${
+                  genderLodgingFilter === 'staying'
+                    ? 'bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost shadow-xs'
+                    : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
+                }`}
+                title="Residential campers staying in dorms"
+              >
+                Stay
+              </button>
+              <button
+                type="button"
+                onClick={() => setGenderLodgingFilter('day')}
+                className={`px-1.5 py-0.5 rounded transition-all ${
+                  genderLodgingFilter === 'day'
+                    ? 'bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost shadow-xs'
+                    : 'text-slateSteel dark:text-slateMuted hover:text-slateVoid dark:hover:text-slateFrost'
+                }`}
+                title="Non-residential day scholars"
+              >
+                Day
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-baseline justify-between mt-1.5">
+            <span className="text-xl sm:text-2xl font-black text-slateVoid dark:text-slateFrost tracking-tight font-mono">
+              {displayedMales}M : {displayedFemales}F
+            </span>
+            <span className="text-[10px] font-mono text-slateSteel dark:text-slateMuted">
+              {displayedTotal} campers
             </span>
           </div>
-          <div className="mt-2.5">
+
+          <div className="mt-2">
             <div className="w-full h-2 rounded-full bg-slateElevated/20 dark:bg-slateElevated overflow-hidden flex">
               <div
                 className="h-full bg-sky-500 transition-all duration-300"
-                style={{ width: `${malePercent}%` }}
-                title={`Boys: ${malePercent}%`}
+                style={{ width: `${displayedMalePct}%` }}
+                title={`Boys: ${displayedMalePct}%`}
               />
               <div
                 className="h-full bg-rose-400 transition-all duration-300"
-                style={{ width: `${femalePercent}%` }}
-                title={`Girls: ${femalePercent}%`}
+                style={{ width: `${displayedFemalePct}%` }}
+                title={`Girls: ${displayedFemalePct}%`}
               />
             </div>
             <div className="flex justify-between text-[10px] font-mono text-slateSteel dark:text-slateMuted mt-1">
-              <span>{malePercent}% Boys</span>
-              <span>{femalePercent}% Girls</span>
+              <span>{displayedMalePct}% Boys</span>
+              <span>{displayedFemalePct}% Girls</span>
             </div>
+          </div>
+
+          <div className="mt-2 pt-1.5 border-t border-slateMuted/15 dark:border-slateElevated/50 flex justify-between text-[9px] font-mono text-slateSteel dark:text-slateMuted">
+            <span className="text-sky-600 dark:text-sky-400 font-semibold">{stayingMales} stay • {nonStayingMales} day</span>
+            <span className="text-rose-500 dark:text-rose-400 font-semibold">{stayingFemales} stay • {nonStayingFemales} day</span>
           </div>
         </div>
 
@@ -346,6 +431,9 @@ export default function DashboardStats({ participants = [], campConfig = null })
               <span className="text-[11px] text-slateSteel dark:text-slateMuted">
                 in dorms
               </span>
+            </div>
+            <div className="text-[9px] font-mono text-slateSteel dark:text-slateMuted truncate mt-0.5">
+              {stayingMales} Boys • {stayingFemales} Girls
             </div>
           </div>
         </div>
@@ -673,6 +761,61 @@ export default function DashboardStats({ participants = [], campConfig = null })
           <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slateElevated/20 dark:bg-slateElevated text-slateVoid dark:text-slateFrost border border-slateMuted/20 self-start sm:self-auto">
             {roomsData.length} Dorms Configured
           </span>
+        </div>
+
+        {/* Staying vs Non-Staying / Day Scholars Gender Distribution Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5 mb-5 p-3 sm:p-4 rounded-xl bg-slateElevated/10 dark:bg-slateElevated/20 border border-slateMuted/20 dark:border-slateElevated">
+          <div className="p-3 rounded-lg bg-white/80 dark:bg-slateMidnight/80 border border-slateMuted/20 shadow-xs">
+            <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider block">
+              Staying Boys
+            </span>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-xl font-black font-mono text-slateVoid dark:text-slateFrost">{stayingMales}</span>
+              <span className="text-[11px] text-slateSteel dark:text-slateMuted font-mono">
+                / {males} ({stayingMalePercent}%)
+              </span>
+            </div>
+            <div className="text-[10px] text-slateSteel dark:text-slateMuted mt-0.5">In male dorms</div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-white/80 dark:bg-slateMidnight/80 border border-slateMuted/20 shadow-xs">
+            <span className="text-[10px] font-bold text-sky-600/75 dark:text-sky-400/75 uppercase tracking-wider block">
+              Day Scholar Boys
+            </span>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-xl font-black font-mono text-slateVoid dark:text-slateFrost">{nonStayingMales}</span>
+              <span className="text-[11px] text-slateSteel dark:text-slateMuted font-mono">
+                / {males} ({nonStayingMalePercent}%)
+              </span>
+            </div>
+            <div className="text-[10px] text-slateSteel dark:text-slateMuted mt-0.5">Non-residential</div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-white/80 dark:bg-slateMidnight/80 border border-slateMuted/20 shadow-xs">
+            <span className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider block">
+              Staying Girls
+            </span>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-xl font-black font-mono text-slateVoid dark:text-slateFrost">{stayingFemales}</span>
+              <span className="text-[11px] text-slateSteel dark:text-slateMuted font-mono">
+                / {females} ({stayingFemalePercent}%)
+              </span>
+            </div>
+            <div className="text-[10px] text-slateSteel dark:text-slateMuted mt-0.5">In female dorms</div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-white/80 dark:bg-slateMidnight/80 border border-slateMuted/20 shadow-xs">
+            <span className="text-[10px] font-bold text-rose-500/75 dark:text-rose-400/75 uppercase tracking-wider block">
+              Day Scholar Girls
+            </span>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-xl font-black font-mono text-slateVoid dark:text-slateFrost">{nonStayingFemales}</span>
+              <span className="text-[11px] text-slateSteel dark:text-slateMuted font-mono">
+                / {females} ({nonStayingFemalePercent}%)
+              </span>
+            </div>
+            <div className="text-[10px] text-slateSteel dark:text-slateMuted mt-0.5">Non-residential</div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">

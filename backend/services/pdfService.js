@@ -475,25 +475,33 @@ function generateStatsReportPdf(config, participants = [], outputStream) {
   y += 14;
 
   const ageBrackets = [
-    { label: 'Teens (13-17 yrs)', count: validAges.filter((a) => a <= 17).length },
-    { label: 'Youth (18-21 yrs)', count: validAges.filter((a) => a >= 18 && a <= 21).length },
-    { label: 'Seniors (22-25 yrs)', count: validAges.filter((a) => a >= 22 && a <= 25).length },
-    { label: 'Leaders (26+ yrs)', count: validAges.filter((a) => a >= 26).length }
+    { label: 'Teens (13-17 yrs)', count: validAges.filter((a) => a <= 17).length, isCount: true },
+    { label: 'Youth (18-21 yrs)', count: validAges.filter((a) => a >= 18 && a <= 21).length, isCount: true },
+    { label: 'Seniors (22-25 yrs)', count: validAges.filter((a) => a >= 22 && a <= 25).length, isCount: true },
+    { label: 'Leaders (26+ yrs)', count: validAges.filter((a) => a >= 26).length, isCount: true },
+    { label: 'First-Timers vs Returning', count: `${firstTimers} New • ${returning} Ret`, isCount: false }
   ];
 
   const leftYStart = y;
   ageBrackets.forEach((b, idx) => {
     const rowTop = leftYStart + idx * 16;
-    const pct = validAges.length > 0 ? Math.round((b.count / validAges.length) * 100) : 0;
     doc.rect(36, rowTop, colW, 14).fillColor(idx % 2 === 0 ? '#FFFFFF' : '#F8FAFA').fill();
     doc.fillColor('#06141B').fontSize(7.5).font('Helvetica').text(b.label, 42, rowTop + 3.5);
-    doc.font('Helvetica-Bold').text(`${b.count} (${pct}%)`, 36 + colW - 65, rowTop + 3.5, {
-      width: 60,
-      align: 'right'
-    });
+    if (b.isCount) {
+      const pct = validAges.length > 0 ? Math.round((b.count / validAges.length) * 100) : 0;
+      doc.font('Helvetica-Bold').text(`${b.count} (${pct}%)`, 36 + colW - 75, rowTop + 3.5, {
+        width: 70,
+        align: 'right'
+      });
+    } else {
+      doc.font('Helvetica-Bold').text(b.count, 36 + colW - 95, rowTop + 3.5, {
+        width: 90,
+        align: 'right'
+      });
+    }
   });
 
-  // Right column: Rooms
+  // Right column: Rooms & Staying vs Day Scholars by Gender
   const rooms = config?.rooms || [];
   const maleRooms = rooms.filter((r) => r.gender === 'Male');
   const femaleRooms = rooms.filter((r) => r.gender === 'Female');
@@ -501,6 +509,8 @@ function generateStatsReportPdf(config, participants = [], outputStream) {
   const femaleCap = femaleRooms.reduce((s, r) => s + Number(r.capacity || 0), 0);
   const maleStaying = participants.filter((p) => p.staying !== false && p.gender === 'Male').length;
   const femaleStaying = participants.filter((p) => p.staying !== false && p.gender === 'Female').length;
+  const maleDay = participants.filter((p) => p.staying === false && p.gender === 'Male').length;
+  const femaleDay = participants.filter((p) => p.staying === false && p.gender === 'Female').length;
 
   const roomStats = [
     {
@@ -514,9 +524,14 @@ function generateStatsReportPdf(config, participants = [], outputStream) {
       pct: femaleCap > 0 ? Math.round((femaleStaying / femaleCap) * 100) : 0
     },
     {
-      label: 'Day Scholars (Non-residential)',
-      occ: `${dayScholars} attendees`,
-      pct: total > 0 ? Math.round((dayScholars / total) * 100) : 0
+      label: 'Boys Lodging (Staying vs Day)',
+      occ: `${maleStaying} Stay • ${maleDay} Day`,
+      pct: males > 0 ? Math.round((maleStaying / males) * 100) : 0
+    },
+    {
+      label: 'Girls Lodging (Staying vs Day)',
+      occ: `${femaleStaying} Stay • ${femaleDay} Day`,
+      pct: females > 0 ? Math.round((femaleStaying / females) * 100) : 0
     },
     {
       label: 'Total Lodging Capacity Utilization',
@@ -530,8 +545,8 @@ function generateStatsReportPdf(config, participants = [], outputStream) {
     const rx = 36 + colW + 15;
     doc.rect(rx, rowTop, colW, 14).fillColor(idx % 2 === 0 ? '#FFFFFF' : '#F8FAFA').fill();
     doc.fillColor('#06141B').fontSize(7.5).font('Helvetica').text(r.label, rx + 6, rowTop + 3.5);
-    doc.font('Helvetica-Bold').text(`${r.occ} (${r.pct}%)`, rx + colW - 95, rowTop + 3.5, {
-      width: 90,
+    doc.font('Helvetica-Bold').text(`${r.occ} (${r.pct}%)`, rx + colW - 105, rowTop + 3.5, {
+      width: 100,
       align: 'right'
     });
   });

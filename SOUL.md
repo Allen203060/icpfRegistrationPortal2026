@@ -70,6 +70,10 @@
   - Decoupled physical bed capacity ceilings from registration blocking: when all rooms for a gender reach 100% capacity, the allocation engine automatically distributes overflow into the least-occupied matching room.
   - Invariant #1 (Absolute Gender Segregation) is strictly maintained; male campers are never placed in female dorms.
   - Eliminated hard 409 rejections in `updateParticipant`, allowing supervisor override assignments and live updates when dorms exceed nominal capacity.
+- [x] **Gender-Segregated Staying vs Day Scholar Analytics:**
+  - Integrated interactive `All | Stay | Day` filter tabs into the top Gender Parity KPI card.
+  - Built a 4-metric distribution grid in the Dormitory Quotas dashboard section displaying Staying Boys, Day Scholar Boys, Staying Girls, and Day Scholar Girls with percentages and sub-counts.
+  - Enhanced vector PDF export to report Staying vs Day Scholars breakdown by gender.
 
 
 ---
