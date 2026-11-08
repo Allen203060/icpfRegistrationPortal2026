@@ -66,6 +66,10 @@
   - Added `isFirstTimer` Boolean field to `Participant` schema with automatic parsing from incoming notes (`First Timer: Yes` from Google Forms or registration desk).
   - Expanded `DashboardStats.jsx` with a 5th high-contrast KPI card for First-Time Campers, along with a New vs Returning camper experience ratio visualizer in Demographics.
   - Implemented streaming PDF generation (`GET /api/export/stats-pdf`) in `pdfService.js` rendering camp-wide executive KPIs, 8-group 4-tier parity breakdown table, age demographics, dorm capacity, and director signature block.
+- [x] **Soft Room Capacity Elasticity & Zero-Rejection Surge Allocation:**
+  - Decoupled physical bed capacity ceilings from registration blocking: when all rooms for a gender reach 100% capacity, the allocation engine automatically distributes overflow into the least-occupied matching room.
+  - Invariant #1 (Absolute Gender Segregation) is strictly maintained; male campers are never placed in female dorms.
+  - Eliminated hard 409 rejections in `updateParticipant`, allowing supervisor override assignments and live updates when dorms exceed nominal capacity.
 
 
 ---

@@ -88,7 +88,7 @@ function chooseTeam(candidate, teams, options = {}) {
     throw allocationError('No teams are configured.', 'NO_TEAMS_CONFIGURED', 503);
   }
 
-  const available = teams
+  const allTeams = teams
     .filter((team) => team && typeof team.name === 'string' && team.name.trim())
     .map((team) => {
       const members = getMembers(team);
@@ -101,11 +101,16 @@ function chooseTeam(candidate, teams, options = {}) {
         full: Number.isFinite(capacity) && capacity > 0 && count >= capacity,
         genderCounts: getGenderCounts(team, members)
       };
-    })
-    .filter((entry) => !entry.full);
+    });
+
+  let available = allTeams.filter((entry) => !entry.full);
 
   if (available.length === 0) {
-    throw allocationError('All configured teams have reached capacity.', 'TEAM_CAPACITY_EXHAUSTED', 409);
+    if (options.allowOverflow) {
+      available = allTeams;
+    } else {
+      throw allocationError('All configured teams have reached capacity.', 'TEAM_CAPACITY_EXHAUSTED', 409);
+    }
   }
 
   // Explicit Override: If user requested a specific team (e.g. Group Registration "Keep Together")
@@ -177,16 +182,19 @@ function chooseRoom(candidate, rooms, options = {}) {
     throw allocationError('Room configuration is unavailable.', 'ROOMS_UNAVAILABLE', 503);
   }
 
-  const matchingRooms = rooms
+  // Find all rooms matching the candidate's gender (strict invariant #1: Absolute Gender Segregation)
+  const allMatchingGenderRooms = rooms
     .filter((room) => {
       if (!room || typeof room.name !== 'string' || !room.name.trim()) return false;
-      if (normalizedText(room.gender) !== normalizedText(candidate.gender)) return false;
-      const capacity = Number(room.capacity);
-      return Number.isFinite(capacity) && capacity > 0 && roomOccupancy(room) < capacity;
+      return normalizedText(room.gender) === normalizedText(candidate.gender);
     })
-    .map((room) => ({ room, occupied: roomOccupancy(room) }));
+    .map((room) => ({
+      room,
+      capacity: Number(room.capacity) || 0,
+      occupied: roomOccupancy(room)
+    }));
 
-  if (matchingRooms.length === 0) {
+  if (allMatchingGenderRooms.length === 0) {
     if (options.allowOverflow) {
       return 'Unassigned (Dorm Full)';
     }
@@ -197,10 +205,46 @@ function chooseRoom(candidate, rooms, options = {}) {
     );
   }
 
-  matchingRooms.sort((a, b) =>
-    a.occupied - b.occupied || compareNames(a.room.name, b.room.name)
+  // Explicit Room Override if specified and matches gender
+  if (options.requestedRoom) {
+    const requested = allMatchingGenderRooms.find(
+      (entry) => entry.room.name.trim().toLowerCase() === options.requestedRoom.trim().toLowerCase()
+    );
+    if (requested) {
+      return requested.room.name.trim();
+    }
+  }
+
+  // 1. First preference: Rooms with remaining capacity under physical ceiling
+  const availableRooms = allMatchingGenderRooms.filter(
+    (entry) => entry.capacity > 0 && entry.occupied < entry.capacity
   );
-  return matchingRooms[0].room.name.trim();
+
+  if (availableRooms.length > 0) {
+    availableRooms.sort((a, b) =>
+      a.occupied - b.occupied || compareNames(a.room.name, b.room.name)
+    );
+    return availableRooms[0].room.name.trim();
+  }
+
+  // 2. Capacity reached across all rooms for this gender:
+  // If overflow is allowed, allocate to the gender-matched room with the lowest occupancy
+  // to evenly distribute bed overflow across dorms while strictly maintaining gender segregation!
+  if (options.allowOverflow) {
+    if (options.overflowTarget === 'unassigned') {
+      return 'Unassigned (Dorm Full)';
+    }
+    allMatchingGenderRooms.sort((a, b) =>
+      a.occupied - b.occupied || compareNames(a.room.name, b.room.name)
+    );
+    return allMatchingGenderRooms[0].room.name.trim();
+  }
+
+  throw allocationError(
+    `No available ${candidate.gender} room has remaining capacity.`,
+    'ROOM_CAPACITY_EXHAUSTED',
+    409
+  );
 }
 
 /**

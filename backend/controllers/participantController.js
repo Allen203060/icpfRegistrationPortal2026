@@ -96,7 +96,8 @@ async function allocateIfEligible(participant, config, session = null) {
 
   const candidate = participant.toObject ? participant.toObject() : participant;
   const allocation = allocateParticipant(candidate, teams, rooms, {
-    lastAssignedTeam
+    lastAssignedTeam,
+    allowOverflow: true
   });
 
   participant.assignedTeam = allocation.assignedTeam;
@@ -490,38 +491,24 @@ async function updateParticipant(req, res, next) {
 
       const nextGender = updates.gender || participant.gender;
       const nextStaying = updates.staying ?? participant.staying;
-      if (updates.assignedTeam !== undefined) {
+      if (updates.assignedTeam !== undefined && updates.assignedTeam) {
         const team = config.teams.find((entry) => entry.name === updates.assignedTeam);
         if (!team) throw createHttpError('Assigned team is not configured.', 'INVALID_TEAM');
-        const countQuery = Participant.countDocuments({
-          _id: { $ne: participant._id },
-          assignedTeam: updates.assignedTeam
-        });
-        if (session) countQuery.session(session);
-        const count = await countQuery;
-        if (team.targetCapacity && count >= team.targetCapacity) {
-          throw createHttpError('Assigned team has reached capacity.', 'TEAM_CAPACITY_EXHAUSTED', 409);
-        }
       }
 
       const targetRoom = updates.assignedRoom !== undefined
         ? updates.assignedRoom
         : (nextStaying ? participant.assignedRoom : '');
       if (nextStaying && targetRoom) {
-        const room = config.rooms.find((entry) => entry.name === targetRoom);
-        if (!room) throw createHttpError('A valid room is required for a residential participant.', 'INVALID_ROOM');
-        if (room.gender !== nextGender) {
-          throw createHttpError('Room gender must match participant gender.', 'ROOM_GENDER_MISMATCH', 409);
-        }
-        const occQuery = Participant.countDocuments({
-          _id: { $ne: participant._id },
-          staying: true,
-          assignedRoom: room.name
-        });
-        if (session) occQuery.session(session);
-        const occupancy = await occQuery;
-        if (occupancy >= room.capacity) {
-          throw createHttpError('Room has reached its bed capacity.', 'ROOM_CAPACITY_EXHAUSTED', 409);
+        // Allow unassigned status without throwing invalid room error
+        if (targetRoom !== 'Unassigned (Dorm Full)' && !targetRoom.startsWith('Unassigned')) {
+          const room = config.rooms.find((entry) => entry.name === targetRoom);
+          if (!room) throw createHttpError('A valid room is required for a residential participant.', 'INVALID_ROOM');
+          if (room.gender !== nextGender) {
+            throw createHttpError('Room gender must match participant gender.', 'ROOM_GENDER_MISMATCH', 409);
+          }
+          // Note: Physical capacity ceiling is soft during supervisor check-in/overflow accommodation.
+          // Invariant #1 (Absolute Gender Segregation) is strictly preserved above.
         }
       } else if (!nextStaying) {
         updates.assignedRoom = '';

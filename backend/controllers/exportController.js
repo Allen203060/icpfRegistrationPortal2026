@@ -144,8 +144,8 @@ async function importExcel(req, res, next) {
     const createdList = [];
 
     for (const candidate of candidates) {
-      // Allocate team and room dynamically
-      const allocation = allocateParticipant(candidate, teams, rooms);
+      // Allocate team and room dynamically with overflow protection
+      const allocation = allocateParticipant(candidate, teams, rooms, { allowOverflow: true });
 
       // Add to tracking state for next candidate
       const teamObj = teams.find((t) => t.name === allocation.assignedTeam);

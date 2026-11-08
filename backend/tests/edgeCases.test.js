@@ -74,8 +74,16 @@ async function runEdgeCaseTests() {
   };
 
   const { assignedRoom } = allocateParticipant(overflowCandidate, mockTeams, smallMaleRooms, { allowOverflow: true });
-  assert.strictEqual(assignedRoom, 'Unassigned (Dorm Full)');
-  console.log('✅ PASS: Room capacity overflow falls back gracefully to "Unassigned (Dorm Full)" without crashing');
+  assert.strictEqual(assignedRoom, 'Male Room 1');
+  console.log('✅ PASS: Room capacity overflow allocates to lowest-occupancy matching gender dorm ("Male Room 1") without crashing');
+
+  // Verify explicit unassigned fallback when requested
+  const unassignedResult = allocateParticipant(overflowCandidate, mockTeams, smallMaleRooms, {
+    allowOverflow: true,
+    overflowTarget: 'unassigned'
+  });
+  assert.strictEqual(unassignedResult.assignedRoom, 'Unassigned (Dorm Full)');
+  console.log('✅ PASS: Room overflow supports explicit unassigned target when configured');
   passed++;
 
   // 3. Absolute Gender Segregation Enforcement

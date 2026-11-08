@@ -186,4 +186,20 @@ This journal tracks architectural hurdles, trade-offs, bugs, and key engineering
   4. Exposed `GET /api/export/stats-pdf` and added a direct export trigger button alongside a new 5th KPI card ("First-Time Campers") and camper experience ratio bar in `DashboardStats.jsx`.
 - **Key Takeaway (Interview Insight):** *Data Ingestion Normalization & Server-Side Document Streaming*: Real-world event systems receive heterogeneous data from both automated webhooks (Google Forms) and manual desk operators. Normalizing unstructured textual metadata into structured, indexed schema fields at the API boundary enables instantaneous client-side aggregations while streaming pre-formatted vector PDFs ensures auditability without client-side rendering overhead.
 
+---
+
+### Challenge 20: Peak Registration Deadlock — Room Capacity Exhaustion & Override Blocking
+- **The Problem:** When all rooms for a gender reached 100% nominal capacity during peak check-in, subsequent attendee allocations failed. Registrations were either blocked with HTTP 409 (`ROOM_CAPACITY_EXHAUSTED`), left as `'Unassigned (Dorm Full)'`, or trapped so that supervisor overrides in `AttendeeLookup` could not save updates due to hard capacity checks throwing errors.
+- **Root Cause:**
+  1. `chooseRoom` in `allocatorService.js` strictly checked `roomOccupancy(room) < capacity`; when full, it threw `ROOM_CAPACITY_EXHAUSTED` (409) or returned an unassigned stub string.
+  2. `updateParticipant` in `participantController.js` enforced a hard rejection `if (occupancy >= room.capacity) throw createHttpError('Room has reached its bed capacity.', 'ROOM_CAPACITY_EXHAUSTED', 409);`, preventing desk operators and supervisors from manually assigning rooms during surge conditions.
+  3. Attendees with `'Unassigned (Dorm Full)'` failed schema validation on updates because `'Unassigned'` was not in `config.rooms`.
+  4. `allocateIfEligible` omitted `allowOverflow: true`, causing payment confirmations to trigger unhandled 409 exceptions.
+- **Solution:**
+  1. In `allocatorService.js`, when all rooms for a gender reach full capacity and overflow is allowed, the engine dynamically selects the room of the matching gender with the minimum occupancy. This distributes overflow beds evenly across dorms while strictly preserving Invariant #1 (Absolute Gender Segregation).
+  2. Removed hard capacity exceptions in `updateParticipant`, allowing supervisor overrides and bed capacity overflow accommodation.
+  3. Added `allowOverflow: true` to `allocateIfEligible` and `importExcel` to guarantee zero-rejection allocation pipelines.
+- **Key Takeaway (Interview Insight):** *Soft Capacity Elasticity vs Hard Invariant Segregation*: Physical constraints in high-velocity operations (such as camp beds or flight seats) must decouple soft capacity limits from hard invariants (gender segregation). Rigidly throwing 409 exceptions during surge registration paralyzes operational desks; instead, systems should absorb overflow into least-occupied matching partitions while alerting supervisors.
+
+
 
