@@ -122,6 +122,11 @@ const participantSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: ''
+    },
+    isFirstTimer: {
+      type: Boolean,
+      default: false,
+      index: true
     }
   },
   {

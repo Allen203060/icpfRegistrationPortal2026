@@ -1,5 +1,5 @@
 const { Participant, CampConfig } = require('../models');
-const { generateIdCardsPdf, generateRoomListsPdf } = require('../services/pdfService');
+const { generateIdCardsPdf, generateRoomListsPdf, generateStatsReportPdf } = require('../services/pdfService');
 const { generateParticipantsWorkbook, parseParticipantsExcel } = require('../services/excelService');
 const { allocateParticipant } = require('../services/allocatorService');
 const { createHttpError } = require('../middleware/validateRequest');
@@ -60,6 +60,26 @@ async function exportRoomLists(req, res, next) {
     res.setHeader('Content-Disposition', 'inline; filename="icpf_camp_2026_room_rosters.pdf"');
 
     generateRoomListsPdf(rooms, participants, res);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/export/stats-pdf
+ * Stream executive statistics and analytics PDF report
+ */
+async function exportStatsPdf(req, res, next) {
+  try {
+    const [config, participants] = await Promise.all([
+      CampConfig.getActiveConfig(),
+      Participant.find().sort({ serialNo: 1 }).lean()
+    ]);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="icpf_camp_2026_stats_report.pdf"');
+
+    generateStatsReportPdf(config, participants, res);
   } catch (error) {
     next(error);
   }
@@ -159,6 +179,7 @@ async function importExcel(req, res, next) {
 module.exports = {
   exportIdCards,
   exportRoomLists,
+  exportStatsPdf,
   exportExcel,
   importExcel
 };

@@ -181,6 +181,12 @@ async function registerParticipant(req, res, next) {
         const balanceDue = req.body.balanceDue !== undefined ? Number(req.body.balanceDue) : Math.max(0, feeTotal - amountPaid);
         const balanceToReturn = req.body.balanceToReturn !== undefined ? Number(req.body.balanceToReturn) : Math.max(0, amountPaid - feeTotal);
 
+        const isFirstTimer = req.body.isFirstTimer === true ||
+          req.body.isFirstTimer === 'true' ||
+          req.body.isFirstTimer === 'Yes' ||
+          /first\s*timer?:\s*yes/i.test(req.body.notes || '') ||
+          /first\s*time\s*attending:\s*yes/i.test(req.body.notes || '');
+
         const participantData = {
           name: req.body.name.trim(),
           age: ageNum,
@@ -190,6 +196,7 @@ async function registerParticipant(req, res, next) {
           staying: req.body.staying !== false,
           phone: req.body.phone || '',
           notes: req.body.notes || '',
+          isFirstTimer,
           paymentStatus,
           amountPaid,
           feeTotal,
@@ -296,6 +303,11 @@ async function registerGroup(req, res, next) {
         }
 
         const memberFee = Number(m.feeTotal ?? getRegistrationFeeByAge(age));
+        const isFirstTimer = m.isFirstTimer === true ||
+          m.isFirstTimer === 'true' ||
+          m.isFirstTimer === 'Yes' ||
+          /first\s*timer?:\s*yes/i.test(m.notes || '') ||
+          /first\s*time\s*attending:\s*yes/i.test(m.notes || '');
 
         const participantData = {
           name: m.name.trim(),
@@ -306,6 +318,7 @@ async function registerGroup(req, res, next) {
           staying: m.staying !== false,
           phone: m.phone || phone || '',
           notes: m.notes || '',
+          isFirstTimer,
           registeredBy: registeredBy || '',
           groupRegistrationId,
           paymentStatus: m.paymentStatus || paymentStatus,

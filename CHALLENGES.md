@@ -174,3 +174,16 @@ This journal tracks architectural hurdles, trade-offs, bugs, and key engineering
   2. Implemented `getRegistrationFeeByAge` utility across backend controllers (`participantController.js`) and frontend forms (`CheckinForm.jsx`, `AttendeeLookup.jsx`, `OverrideModal.jsx`), automatically binding ₹400 for campers aged 13–24 and ₹500 for ages 25+, with reactive calculation on age field input.
 - **Key Takeaway (Interview Insight):** *CSS Token Syntactic Integrity & Domain-Driven Pricing Rules*: Malformed utility classes silently degrade to preceding cascade rules rather than throwing runtime errors. Pairing automated age-tier defaults with strict CSS validation ensures high visual polish and eliminates manual cashier arithmetic at the check-in desk.
 
+---
+
+### Challenge 19: Dual-Format First-Timer Demographic Tracking & Vector PDF Analytics Export
+- **The Problem:** Camp leadership required live visibility into first-time vs returning camper counts on the dashboard, plus the ability to export a comprehensive, print-ready analytics report as a PDF immediately after registration closes. First-timer data entered the system via multiple channels: some pre-registered through Google Forms (which serialized "First Time Attending: Yes" into the candidate's notes string), while in-person registrations pass explicit boolean flags.
+- **Root Cause:** In the legacy schema, `isFirstTimer` was not a dedicated schema property, leaving first-time status buried in unstructured freeform notes. Additionally, while PDFKit was configured for ID badges and room rosters, an executive A4 tabular analytics summary did not exist.
+- **Solution:**
+  1. Extended `Participant` schema with indexed `isFirstTimer: { type: Boolean, default: false, index: true }`.
+  2. Implemented dual-channel normalization in `participantController.js`: if `req.body.isFirstTimer` is provided it is honored; otherwise, regex scans `notes` for `/(first\s*timer?:\s*yes|first\s*time\s*attending:\s*yes)/i`.
+  3. Created `generateStatsReportPdf` in `pdfService.js` that streams an A4 PDF containing an executive KPI grid, 8-group 4-tier parity breakdown table, age demographics, dorm capacity utilization, and physical signature lines for camp directors.
+  4. Exposed `GET /api/export/stats-pdf` and added a direct export trigger button alongside a new 5th KPI card ("First-Time Campers") and camper experience ratio bar in `DashboardStats.jsx`.
+- **Key Takeaway (Interview Insight):** *Data Ingestion Normalization & Server-Side Document Streaming*: Real-world event systems receive heterogeneous data from both automated webhooks (Google Forms) and manual desk operators. Normalizing unstructured textual metadata into structured, indexed schema fields at the API boundary enables instantaneous client-side aggregations while streaming pre-formatted vector PDFs ensures auditability without client-side rendering overhead.
+
+

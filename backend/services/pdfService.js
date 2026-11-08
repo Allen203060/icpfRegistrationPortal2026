@@ -281,8 +281,278 @@ function generateRoomListsPdf(rooms, participants, outputStream) {
   doc.end();
 }
 
+/**
+ * Generate Executive Statistics and Analytics PDF Report
+ * Streamed via /api/export/stats-pdf
+ */
+function generateStatsReportPdf(config, participants = [], outputStream) {
+  const doc = new PDFDocument({
+    size: 'A4',
+    margin: 36,
+    autoFirstPage: true,
+    info: {
+      Title: 'ICPF Camp 2026 — Executive Statistics & Analytics Report',
+      Author: 'ICPF Camp Management System'
+    }
+  });
+
+  doc.pipe(outputStream);
+
+  const total = participants.length;
+  const males = participants.filter((p) => p.gender === 'Male').length;
+  const females = participants.filter((p) => p.gender === 'Female').length;
+  const staying = participants.filter((p) => p.staying !== false).length;
+  const dayScholars = total - staying;
+
+  const isFirstTimer = (p) =>
+    p.isFirstTimer === true ||
+    /first\s*timer?:\s*yes/i.test(p.notes || '') ||
+    /first\s*time/i.test(p.notes || '');
+
+  const firstTimers = participants.filter(isFirstTimer).length;
+  const returning = total - firstTimers;
+  const firstTimerPct = total > 0 ? Math.round((firstTimers / total) * 100) : 0;
+  const returningPct = total > 0 ? 100 - firstTimerPct : 0;
+
+  const validAges = participants
+    .map((p) => Number(p.age))
+    .filter((a) => Number.isFinite(a) && a > 0);
+  const avgAge =
+    validAges.length > 0
+      ? (validAges.reduce((s, a) => s + a, 0) / validAges.length).toFixed(1)
+      : '—';
+
+  const totalExpected = participants.reduce((s, p) => s + Number(p.feeTotal || 0), 0);
+  const totalCollected = participants.reduce((s, p) => s + Number(p.amountPaid || 0), 0);
+  const totalDues = participants.reduce((s, p) => s + Number(p.balanceDue || 0), 0);
+  const onlineCollected = participants
+    .filter((p) => p.paymentStatus === 'Paid Online')
+    .reduce((s, p) => s + Number(p.amountPaid || 0), 0);
+  const cashCollected = participants
+    .filter((p) => p.paymentStatus === 'Paid Cash')
+    .reduce((s, p) => s + Number(p.amountPaid || 0), 0);
+  const realizationRate =
+    totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
+
+  // Header Banner
+  doc.rect(36, 36, 523, 54).fillColor('#06141B').fill();
+  doc.fillColor('#FFFFFF').fontSize(13).font('Helvetica-Bold').text(
+    'ICPF CAMP 2026 — REGISTRATION & ANALYTICS REPORT',
+    50,
+    47
+  );
+  doc.fillColor('#9BA8AB').fontSize(8.5).font('Helvetica').text(
+    `Official Camp Summary • Generated: ${new Date().toLocaleString('en-IN')}`,
+    50,
+    66
+  );
+
+  // KPI Grid Cards (Row 1)
+  let y = 102;
+  const cardW = 122;
+  const cardH = 48;
+  const gap = 11;
+
+  const kpis = [
+    { label: 'TOTAL ATTENDEES', val: `${total}`, sub: `Avg ${avgAge} yrs` },
+    { label: 'FIRST-TIME CAMPERS', val: `${firstTimers}`, sub: `${firstTimerPct}% of attendees` },
+    { label: 'RETURNING CAMPERS', val: `${returning}`, sub: `${returningPct}% of attendees` },
+    {
+      label: 'GENDER PARITY',
+      val: `${males}M : ${females}F`,
+      sub: `${total > 0 ? Math.round((males / total) * 100) : 50}% Boys • ${
+        total > 0 ? Math.round((females / total) * 100) : 50
+      }% Girls`
+    }
+  ];
+
+  kpis.forEach((kpi, idx) => {
+    const x = 36 + idx * (cardW + gap);
+    doc.roundedRect(x, y, cardW, cardH, 6).fillColor('#F2F5F5').fill();
+    doc.roundedRect(x, y, cardW, cardH, 6).strokeColor('#CCD0CF').lineWidth(0.5).stroke();
+    doc.fillColor('#4A5C6A').fontSize(7).font('Helvetica-Bold').text(kpi.label, x + 8, y + 7);
+    doc.fillColor('#06141B').fontSize(14).font('Helvetica-Bold').text(kpi.val, x + 8, y + 17);
+    doc.fillColor('#4A5C6A').fontSize(7.5).font('Helvetica').text(kpi.sub, x + 8, y + 34);
+  });
+
+  // KPI Grid Cards (Row 2)
+  y += cardH + 8;
+  const kpis2 = [
+    { label: 'RESIDENTIAL DORMS', val: `${staying} Beds`, sub: `${dayScholars} Day Scholars` },
+    {
+      label: 'FEE REALIZATION',
+      val: `${realizationRate}%`,
+      sub: `₹${totalCollected.toLocaleString('en-IN')} / ₹${totalExpected.toLocaleString('en-IN')}`
+    },
+    {
+      label: 'ONLINE UPI STREAM',
+      val: `₹${onlineCollected.toLocaleString('en-IN')}`,
+      sub: `Cash: ₹${cashCollected.toLocaleString('en-IN')}`
+    },
+    {
+      label: 'PENDING DUES',
+      val: `₹${totalDues.toLocaleString('en-IN')}`,
+      sub: `${participants.filter((p) => Number(p.balanceDue) > 0).length} campers with balance`
+    }
+  ];
+
+  kpis2.forEach((kpi, idx) => {
+    const x = 36 + idx * (cardW + gap);
+    doc.roundedRect(x, y, cardW, cardH, 6).fillColor('#F2F5F5').fill();
+    doc.roundedRect(x, y, cardW, cardH, 6).strokeColor('#CCD0CF').lineWidth(0.5).stroke();
+    doc.fillColor('#4A5C6A').fontSize(7).font('Helvetica-Bold').text(kpi.label, x + 8, y + 7);
+    doc.fillColor(idx === 3 && totalDues > 0 ? '#E11D48' : '#06141B').fontSize(14).font('Helvetica-Bold').text(kpi.val, x + 8, y + 17);
+    doc.fillColor('#4A5C6A').fontSize(7.5).font('Helvetica').text(kpi.sub, x + 8, y + 34);
+  });
+
+  // Section: 8-Group Parity Table
+  y += cardH + 16;
+  doc.fillColor('#06141B').fontSize(10).font('Helvetica-Bold').text(
+    '8-Group Dynamic Allocation & Balance Matrix',
+    36,
+    y
+  );
+  y += 14;
+
+  // Table header
+  doc.rect(36, y, 523, 17).fillColor('#253745').fill();
+  doc.fillColor('#FFFFFF').fontSize(7.5).font('Helvetica-Bold');
+  doc.text('GROUP NAME', 44, y + 5, { width: 110 });
+  doc.text('TOTAL', 160, y + 5, { width: 45, align: 'center' });
+  doc.text('MALES', 215, y + 5, { width: 45, align: 'center' });
+  doc.text('FEMALES', 270, y + 5, { width: 45, align: 'center' });
+  doc.text('PARITY (|M-F|)', 325, y + 5, { width: 65, align: 'center' });
+  doc.text('AVG AGE', 400, y + 5, { width: 50, align: 'center' });
+  doc.text('FEES COLLECTED', 460, y + 5, { width: 90, align: 'right' });
+  y += 17;
+
+  const teams = config?.teams || [];
+  teams.forEach((t, i) => {
+    const tMembers = participants.filter(
+      (p) => p.assignedTeam?.toLowerCase() === t.name?.toLowerCase()
+    );
+    const tMales = tMembers.filter((p) => p.gender === 'Male').length;
+    const tFemales = tMembers.filter((p) => p.gender === 'Female').length;
+    const parityDiff = Math.abs(tMales - tFemales);
+    const tAges = tMembers
+      .map((p) => Number(p.age))
+      .filter((a) => Number.isFinite(a) && a > 0);
+    const tAvg =
+      tAges.length > 0
+        ? (tAges.reduce((s, a) => s + a, 0) / tAges.length).toFixed(1)
+        : '—';
+    const tPaid = tMembers.reduce((s, p) => s + Number(p.amountPaid || 0), 0);
+
+    const bg = i % 2 === 0 ? '#FFFFFF' : '#F8FAFA';
+    doc.rect(36, y, 523, 15).fillColor(bg).fill();
+
+    doc.fillColor('#06141B').fontSize(7.5).font('Helvetica-Bold').text(t.name, 44, y + 4);
+    doc.font('Helvetica').text(`${tMembers.length}`, 160, y + 4, { width: 45, align: 'center' });
+    doc.text(`${tMales}`, 215, y + 4, { width: 45, align: 'center' });
+    doc.text(`${tFemales}`, 270, y + 4, { width: 45, align: 'center' });
+    doc.text(`±${parityDiff}`, 325, y + 4, { width: 65, align: 'center' });
+    doc.text(`${tAvg}y`, 400, y + 4, { width: 50, align: 'center' });
+    doc.text(`₹${tPaid.toLocaleString('en-IN')}`, 460, y + 4, { width: 90, align: 'right' });
+    y += 15;
+  });
+
+  // Section: Demographics & Room Breakdown (Two Columns)
+  y += 14;
+  const colW = 254;
+
+  // Left column: Age Brackets
+  doc.fillColor('#06141B').fontSize(10).font('Helvetica-Bold').text(
+    'Age Bracket Demographics',
+    36,
+    y
+  );
+  // Right column: Dorm Quotas
+  doc.fillColor('#06141B').fontSize(10).font('Helvetica-Bold').text(
+    'Residential Dorm Quotas',
+    36 + colW + 15,
+    y
+  );
+  y += 14;
+
+  const ageBrackets = [
+    { label: 'Teens (13-17 yrs)', count: validAges.filter((a) => a <= 17).length },
+    { label: 'Youth (18-21 yrs)', count: validAges.filter((a) => a >= 18 && a <= 21).length },
+    { label: 'Seniors (22-25 yrs)', count: validAges.filter((a) => a >= 22 && a <= 25).length },
+    { label: 'Leaders (26+ yrs)', count: validAges.filter((a) => a >= 26).length }
+  ];
+
+  const leftYStart = y;
+  ageBrackets.forEach((b, idx) => {
+    const rowTop = leftYStart + idx * 16;
+    const pct = validAges.length > 0 ? Math.round((b.count / validAges.length) * 100) : 0;
+    doc.rect(36, rowTop, colW, 14).fillColor(idx % 2 === 0 ? '#FFFFFF' : '#F8FAFA').fill();
+    doc.fillColor('#06141B').fontSize(7.5).font('Helvetica').text(b.label, 42, rowTop + 3.5);
+    doc.font('Helvetica-Bold').text(`${b.count} (${pct}%)`, 36 + colW - 65, rowTop + 3.5, {
+      width: 60,
+      align: 'right'
+    });
+  });
+
+  // Right column: Rooms
+  const rooms = config?.rooms || [];
+  const maleRooms = rooms.filter((r) => r.gender === 'Male');
+  const femaleRooms = rooms.filter((r) => r.gender === 'Female');
+  const maleCap = maleRooms.reduce((s, r) => s + Number(r.capacity || 0), 0);
+  const femaleCap = femaleRooms.reduce((s, r) => s + Number(r.capacity || 0), 0);
+  const maleStaying = participants.filter((p) => p.staying !== false && p.gender === 'Male').length;
+  const femaleStaying = participants.filter((p) => p.staying !== false && p.gender === 'Female').length;
+
+  const roomStats = [
+    {
+      label: `Male Dorms (${maleRooms.length} rooms)`,
+      occ: `${maleStaying} / ${maleCap} beds`,
+      pct: maleCap > 0 ? Math.round((maleStaying / maleCap) * 100) : 0
+    },
+    {
+      label: `Female Dorms (${femaleRooms.length} rooms)`,
+      occ: `${femaleStaying} / ${femaleCap} beds`,
+      pct: femaleCap > 0 ? Math.round((femaleStaying / femaleCap) * 100) : 0
+    },
+    {
+      label: 'Day Scholars (Non-residential)',
+      occ: `${dayScholars} attendees`,
+      pct: total > 0 ? Math.round((dayScholars / total) * 100) : 0
+    },
+    {
+      label: 'Total Lodging Capacity Utilization',
+      occ: `${staying} / ${maleCap + femaleCap} beds`,
+      pct: maleCap + femaleCap > 0 ? Math.round((staying / (maleCap + femaleCap)) * 100) : 0
+    }
+  ];
+
+  roomStats.forEach((r, idx) => {
+    const rowTop = leftYStart + idx * 16;
+    const rx = 36 + colW + 15;
+    doc.rect(rx, rowTop, colW, 14).fillColor(idx % 2 === 0 ? '#FFFFFF' : '#F8FAFA').fill();
+    doc.fillColor('#06141B').fontSize(7.5).font('Helvetica').text(r.label, rx + 6, rowTop + 3.5);
+    doc.font('Helvetica-Bold').text(`${r.occ} (${r.pct}%)`, rx + colW - 95, rowTop + 3.5, {
+      width: 90,
+      align: 'right'
+    });
+  });
+
+  // Footer Signature Block
+  const footerY = 765;
+  doc.moveTo(36, footerY).lineTo(559, footerY).strokeColor('#CCD0CF').lineWidth(0.5).stroke();
+  doc.fillColor('#4A5C6A').fontSize(7.5).font('Helvetica').text(
+    'Report Verified By: ___________________________',
+    42,
+    footerY + 12
+  );
+  doc.text('Camp Director Signature: ___________________________', 240, footerY + 12);
+  doc.text('Date: ________________', 470, footerY + 12);
+
+  doc.end();
+}
+
 module.exports = {
   generateIdCardsPdf,
   generateRoomListsPdf,
+  generateStatsReportPdf,
   abbreviateName
 };

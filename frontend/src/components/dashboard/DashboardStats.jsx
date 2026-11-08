@@ -18,8 +18,11 @@ import {
   Layers,
   ChevronRight,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Download,
+  Sparkles
 } from 'lucide-react';
+import { getExportUrl } from '../../services/api';
 
 export default function DashboardStats({ participants = [], campConfig = null }) {
   const [selectedTeamModal, setSelectedTeamModal] = useState(null);
@@ -32,6 +35,16 @@ export default function DashboardStats({ participants = [], campConfig = null })
   const females = participants.filter((p) => p.gender === 'Female').length;
   const staying = participants.filter((p) => p.staying !== false).length;
   const dayScholars = total - staying;
+
+  const isFirstTimerCamper = (p) =>
+    p.isFirstTimer === true ||
+    /first\s*timer?:\s*yes/i.test(p.notes || '') ||
+    /first\s*time/i.test(p.notes || '');
+
+  const firstTimers = participants.filter(isFirstTimerCamper).length;
+  const returningCampers = Math.max(0, total - firstTimers);
+  const firstTimerPercent = total > 0 ? Math.round((firstTimers / total) * 100) : 0;
+  const returningPercent = total > 0 ? 100 - firstTimerPercent : 0;
 
   const malePercent = total > 0 ? Math.round((males / total) * 100) : 50;
   const femalePercent = total > 0 ? 100 - malePercent : 50;
@@ -227,16 +240,26 @@ export default function DashboardStats({ participants = [], campConfig = null })
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-mono self-start sm:self-auto">
-            <span className="px-3 py-1 rounded-lg bg-slateElevated/10 dark:bg-slateElevated text-slateSteel dark:text-slateFrost border border-slateMuted/20 font-semibold">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <a
+              href={getExportUrl('stats-pdf')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slateSteel/10 hover:bg-slateSteel/20 dark:bg-slateElevated dark:hover:bg-slateElevated/80 text-slateVoid dark:text-slateFrost border border-slateMuted/30 text-xs font-semibold shadow-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
+              title="Download executive PDF analytics report"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Export Stats (PDF)</span>
+            </a>
+            <span className="px-3 py-1.5 rounded-xl bg-slateElevated/10 dark:bg-slateElevated text-slateSteel dark:text-slateFrost border border-slateMuted/20 font-mono text-xs font-semibold">
               {campConfig?.campTitle || 'ICPF 2026'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* 2. Top 4 High-Contrast KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+      {/* 2. Top High-Contrast KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
         {/* KPI 1: Total Attendance */}
         <div className="bg-white dark:bg-slateMidnight rounded-2xl p-4 sm:p-5 border border-slateMuted/30 dark:border-slateElevated shadow-card-light dark:shadow-card-dark flex items-center gap-3.5 sm:gap-4 transition-all">
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slateSteel/10 dark:bg-slateElevated text-slateSteel dark:text-slateFrost flex items-center justify-center shrink-0 border border-slateSteel/20">
@@ -257,7 +280,27 @@ export default function DashboardStats({ participants = [], campConfig = null })
           </div>
         </div>
 
-        {/* KPI 2: Gender Parity Spectrum */}
+        {/* KPI 2: First-Time Campers */}
+        <div className="bg-white dark:bg-slateMidnight rounded-2xl p-4 sm:p-5 border border-slateMuted/30 dark:border-slateElevated shadow-card-light dark:shadow-card-dark flex items-center gap-3.5 sm:gap-4 transition-all">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slateSteel dark:text-slateMuted block truncate">
+              First-Time Campers
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl sm:text-2xl font-black text-slateVoid dark:text-slateFrost tracking-tight font-mono">
+                {firstTimers}
+              </span>
+              <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold">
+                {firstTimerPercent}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 3: Gender Parity Spectrum */}
         <div className="bg-white dark:bg-slateMidnight rounded-2xl p-4 sm:p-5 border border-slateMuted/30 dark:border-slateElevated shadow-card-light dark:shadow-card-dark flex flex-col justify-between transition-all">
           <div className="flex items-center justify-between">
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slateSteel dark:text-slateMuted">
@@ -287,7 +330,7 @@ export default function DashboardStats({ participants = [], campConfig = null })
           </div>
         </div>
 
-        {/* KPI 3: Residential Lodging */}
+        {/* KPI 4: Residential Lodging */}
         <div className="bg-white dark:bg-slateMidnight rounded-2xl p-4 sm:p-5 border border-slateMuted/30 dark:border-slateElevated shadow-card-light dark:shadow-card-dark flex items-center gap-3.5 sm:gap-4 transition-all">
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
             <BedDouble className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -307,8 +350,8 @@ export default function DashboardStats({ participants = [], campConfig = null })
           </div>
         </div>
 
-        {/* KPI 4: Financial Realization */}
-        <div className="bg-white dark:bg-slateMidnight rounded-2xl p-4 sm:p-5 border border-slateMuted/30 dark:border-slateElevated shadow-card-light dark:shadow-card-dark flex items-center gap-3.5 sm:gap-4 transition-all">
+        {/* KPI 5: Financial Realization */}
+        <div className="bg-white dark:bg-slateMidnight rounded-2xl p-4 sm:p-5 border border-slateMuted/30 dark:border-slateElevated shadow-card-light dark:shadow-card-dark flex items-center gap-3.5 sm:gap-4 transition-all col-span-2 sm:col-span-1">
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slateSteel/10 dark:bg-slateElevated text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-slateSteel/20">
             <DollarSign className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
@@ -711,6 +754,34 @@ export default function DashboardStats({ participants = [], campConfig = null })
             <span className="text-xs font-mono font-bold text-slateVoid dark:text-slateFrost">
               Avg {overallMeanAge} yrs
             </span>
+          </div>
+
+          <div className="mb-4 pb-4 border-b border-slateMuted/20 dark:border-slateElevated/60">
+            <div className="flex justify-between items-center text-xs mb-1.5">
+              <span className="font-semibold text-slateVoid dark:text-slateFrost flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                Camper Experience Ratio
+              </span>
+              <span className="font-mono text-slateSteel dark:text-slateMuted">
+                {firstTimers} New : {returningCampers} Returning
+              </span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-slateElevated/20 dark:bg-slateElevated overflow-hidden flex">
+              <div
+                className="h-full bg-amber-500 transition-all duration-300"
+                style={{ width: `${firstTimerPercent}%` }}
+                title={`First Timers: ${firstTimerPercent}%`}
+              />
+              <div
+                className="h-full bg-indigo-500 transition-all duration-300"
+                style={{ width: `${returningPercent}%` }}
+                title={`Returning Campers: ${returningPercent}%`}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] font-mono text-slateSteel dark:text-slateMuted mt-1">
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">{firstTimerPercent}% First-Timers</span>
+              <span className="text-indigo-600 dark:text-indigo-400 font-semibold">{returningPercent}% Returning</span>
+            </div>
           </div>
 
           <div className="space-y-3">

@@ -3,6 +3,7 @@ const multer = require('multer');
 const {
   exportIdCards,
   exportRoomLists,
+  exportStatsPdf,
   exportExcel,
   importExcel
 } = require('../controllers/exportController');
@@ -15,6 +16,7 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
+router.get('/stats-pdf', exportStatsPdf);
 router.get('/id-cards', exportIdCards);
 router.get('/room-lists', exportRoomLists);
 router.get('/excel', exportExcel);
