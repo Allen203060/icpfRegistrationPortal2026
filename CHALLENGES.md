@@ -213,6 +213,15 @@ This journal tracks architectural hurdles, trade-offs, bugs, and key engineering
   2. Updated `Code.gs` to retry any row marked `'ERROR'` or `'FAILED'`, added exponential cold-start backoff, and aligned the fee rate to ₹400 for age 13–24 and ₹500 for age 25+.
 - **Key Takeaway (Interview Insight):** *Unconditional Invariant Absorption in High-Throughput Event Ingestion*: Webhook pipelines must never fail due to capacity limits. By replacing hard rejection boundaries with deterministic overflow absorption, external systems (Google Sheets, Forms) maintain 100% submission success without dropping attendees.
 
+---
+
+### Challenge 22: Decoupling Volunteer / Leader Roles from Automated Diversity Heuristics
+- **The Problem:** Event leaders, counselors, and volunteers need to be clearly tracked in the system and assigned to a dedicated `"Leader"` group. If added to the regular team list without protection, the 4-tier diversity heuristic allocator would automatically distribute regular attendees into the "Leader" group, skewing team counts and placing regular campers into staff cohorts.
+- **Root Cause:** Treating all team entities symmetrically in a greedy parity optimizer causes specialized operational teams (staff, counselors, leaders) to absorb regular intake.
+- **Solution:** Partitioned team configurations into regular participant teams and special role teams in `allocatorService.js`. The allocator explicitly excludes `"Leader"` from the candidate search space during automatic 4-tier parity distribution, only granting assignment when explicitly requested by supervisor override or manual selection.
+- **Key Takeaway (Interview Insight):** *Domain Role Partitioning in Constrained Optimization*: Never subject administrative or utility groups to consumer-balancing heuristics. Filtering candidate search spaces prior to objective evaluation guarantees role purity without complicating cost functions.
+
+
 
 
 

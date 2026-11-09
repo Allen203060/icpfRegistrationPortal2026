@@ -42,6 +42,11 @@ const participantSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },
+    churchLocation: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     location: {
       type: String,
       trim: true,
@@ -136,8 +141,8 @@ const participantSchema = new mongoose.Schema(
   }
 );
 
-// High-speed text index for debounced attendee searches across name, church, and location
-participantSchema.index({ name: 'text', church: 'text', location: 'text' });
+// High-speed text index for debounced attendee searches across name, church, churchLocation, and location
+participantSchema.index({ name: 'text', church: 'text', churchLocation: 'text', location: 'text' });
 
 // Compound index for gender + team distribution queries
 participantSchema.index({ assignedTeam: 1, gender: 1 });

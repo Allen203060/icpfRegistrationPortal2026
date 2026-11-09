@@ -24,6 +24,7 @@ const INITIAL_SINGLE_FORM = {
   age: '',
   gender: 'Male',
   church: '',
+  churchLocation: '',
   location: '',
   staying: true,
   phone: '',
@@ -36,12 +37,13 @@ const INITIAL_SINGLE_FORM = {
   paymentNotes: ''
 };
 
-const createEmptyMember = (defaultChurch = '', defaultLocation = '') => ({
+const createEmptyMember = (defaultChurch = '', defaultChurchLocation = '', defaultLocation = '') => ({
   name: '',
   age: '',
   gender: 'Male',
   staying: true,
   church: defaultChurch,
+  churchLocation: defaultChurchLocation,
   location: defaultLocation,
   notes: ''
 });
@@ -62,6 +64,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
     registeredBy: '',
     phone: '',
     church: '',
+    churchLocation: '',
     location: '',
     keepTogether: false,
     paymentStatus: 'Paid Cash',
@@ -216,6 +219,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
       setSingleForm((prev) => ({
         ...INITIAL_SINGLE_FORM,
         church: prev.church,
+        churchLocation: prev.churchLocation,
         location: prev.location,
         staying: prev.staying
       }));
@@ -307,7 +311,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
 
   const addMember = () => {
     setMembers((prev) => {
-      const next = [...prev, createEmptyMember(groupParent.church, groupParent.location)];
+      const next = [...prev, createEmptyMember(groupParent.church, groupParent.churchLocation, groupParent.location)];
       const totalFee = next.length * DEFAULT_FEE_PER_PERSON;
       setGroupParent((p) => ({
         ...p,
@@ -367,6 +371,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
         registeredBy: groupParent.registeredBy.trim(),
         phone: groupParent.phone.trim(),
         church: groupParent.church.trim(),
+        churchLocation: groupParent.churchLocation.trim(),
         location: groupParent.location.trim(),
         keepTogether: Boolean(groupParent.keepTogether),
         paymentStatus: groupParent.paymentStatus,
@@ -381,6 +386,7 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
           gender: m.gender,
           staying: m.staying !== false,
           church: m.church?.trim() || groupParent.church.trim(),
+          churchLocation: m.churchLocation?.trim() || groupParent.churchLocation.trim(),
           location: m.location?.trim() || groupParent.location.trim(),
           notes: m.notes?.trim() || ''
         }))
@@ -405,8 +411,8 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
 
       // Reset members but retain leader church/city
       setMembers([
-        createEmptyMember(groupParent.church, groupParent.location),
-        createEmptyMember(groupParent.church, groupParent.location)
+        createEmptyMember(groupParent.church, groupParent.churchLocation, groupParent.location),
+        createEmptyMember(groupParent.church, groupParent.churchLocation, groupParent.location)
       ]);
     } catch (err) {
       toast.error(err.message || 'Group registration failed', { id: toastId });
@@ -755,8 +761,8 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
               </div>
             </div>
 
-            {/* Church & City */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Church, Church Location & City */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
                   Church / Parish
@@ -776,7 +782,21 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
-                  City / Region
+                  Church Location
+                </label>
+                <input
+                  type="text"
+                  name="churchLocation"
+                  value={singleForm.churchLocation}
+                  onChange={handleSingleChange}
+                  placeholder="e.g. Kumbanad / Area"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/70 dark:bg-slateMidnight/70 text-slateVoid dark:text-slateFrost text-sm focus:bg-white dark:focus:bg-slateMidnight focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all placeholder:text-slateSteel/50 dark:placeholder:text-slateMuted/50"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
+                  Personal City / Region
                 </label>
                 <input
                   type="text"
@@ -1033,6 +1053,20 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                     value={groupParent.church}
                     onChange={handleGroupParentChange}
                     placeholder="e.g. IPC Ebenezer"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost text-sm focus:ring-2 focus:ring-sky-500 placeholder:text-slateSteel/50 dark:placeholder:text-slateMuted/50"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
+                    Church Location
+                  </label>
+                  <input
+                    type="text"
+                    name="churchLocation"
+                    value={groupParent.churchLocation}
+                    onChange={handleGroupParentChange}
+                    placeholder="e.g. Kumbanad / Area"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/80 dark:bg-slateMidnight/80 text-slateVoid dark:text-slateFrost text-sm focus:ring-2 focus:ring-sky-500 placeholder:text-slateSteel/50 dark:placeholder:text-slateMuted/50"
                   />
                 </div>

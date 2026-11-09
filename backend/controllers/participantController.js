@@ -8,12 +8,14 @@ const participantFields = [
   'age',
   'gender',
   'church',
+  'churchLocation',
   'location',
   'staying',
   'phone',
   'assignedTeam',
   'assignedRoom',
   'notes',
+  'isFirstTimer',
   'paymentStatus',
   'amountPaid',
   'feeTotal',
@@ -193,6 +195,7 @@ async function registerParticipant(req, res, next) {
           age: ageNum,
           gender: req.body.gender,
           church: req.body.church || '',
+          churchLocation: req.body.churchLocation || '',
           location: req.body.location || '',
           staying: req.body.staying !== false,
           phone: req.body.phone || '',
@@ -315,6 +318,7 @@ async function registerGroup(req, res, next) {
           age,
           gender: m.gender === 'Female' ? 'Female' : 'Male',
           church: m.church || church || '',
+          churchLocation: m.churchLocation || req.body.churchLocation || '',
           location: m.location || location || '',
           staying: m.staying !== false,
           phone: m.phone || phone || '',
@@ -377,7 +381,7 @@ async function registerGroup(req, res, next) {
  */
 async function updateParticipantNotes(req, res, next) {
   try {
-    const { notes, paymentNotes, paymentStatus, amountPaid, balanceDue, balanceToReturn } = req.body;
+    const { notes, paymentNotes, paymentStatus, amountPaid, balanceDue, balanceToReturn, church, churchLocation, location } = req.body;
     const participant = await Participant.findById(req.params.id);
     if (!participant) {
       throw createHttpError('Participant was not found.', 'PARTICIPANT_NOT_FOUND', 404);
@@ -389,6 +393,9 @@ async function updateParticipantNotes(req, res, next) {
     if (amountPaid !== undefined) participant.amountPaid = Number(amountPaid);
     if (balanceDue !== undefined) participant.balanceDue = Number(balanceDue);
     if (balanceToReturn !== undefined) participant.balanceToReturn = Number(balanceToReturn);
+    if (church !== undefined) participant.church = church.trim();
+    if (churchLocation !== undefined) participant.churchLocation = churchLocation.trim();
+    if (location !== undefined) participant.location = location.trim();
 
     // If currently unallocated, trigger allocation if payment is now complete
     if (!participant.assignedTeam) {
@@ -420,6 +427,7 @@ async function listParticipants(req, res, next) {
       filter.$or = [
         { name: pattern },
         { church: pattern },
+        { churchLocation: pattern },
         { location: pattern },
         { phone: pattern }
       ];

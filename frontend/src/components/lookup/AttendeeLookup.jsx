@@ -69,6 +69,7 @@ export default function AttendeeLookup({
         !query ||
         p.name?.toLowerCase().includes(query) ||
         p.church?.toLowerCase().includes(query) ||
+        p.churchLocation?.toLowerCase().includes(query) ||
         p.location?.toLowerCase().includes(query) ||
         p.phone?.toLowerCase().includes(query) ||
         p.notes?.toLowerCase().includes(query) ||
@@ -143,6 +144,8 @@ export default function AttendeeLookup({
     setQuickFeeOption(option);
     setQuickForm({
       notes: camper.notes || '',
+      church: camper.church || '',
+      churchLocation: camper.churchLocation || '',
       paymentStatus: camper.paymentStatus || 'Waiting Payment',
       amountPaid: paid,
       feeTotal: fee,
@@ -264,6 +267,17 @@ export default function AttendeeLookup({
 
             {/* Quick Export Downloads */}
             <div className="flex items-center gap-1.5">
+              <a
+                href={getExportUrl('csv')}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-press flex items-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
+                title="Download latest Phone & Group ID CSV"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Phone & Group CSV</span>
+              </a>
+
               <a
                 href={getExportUrl('excel')}
                 target="_blank"
@@ -430,7 +444,7 @@ export default function AttendeeLookup({
                         <span>
                           {camper.gender}, {camper.age}y
                         </span>
-                        <span>• {camper.church || 'General'}</span>
+                        <span>• {camper.church || 'General'}{camper.churchLocation ? ` (${camper.churchLocation})` : ''}</span>
                         {camper.phone && <span>• {camper.phone}</span>}
                       </div>
                     </div>
@@ -632,11 +646,18 @@ export default function AttendeeLookup({
 
                         {/* Church */}
                         <td className="py-3.5 px-4">
-                          <div className="font-medium text-slateVoid dark:text-slateFrost truncate max-w-[170px]">
+                          <div className="font-medium text-slateVoid dark:text-slateFrost truncate max-w-[170px]" title={camper.church}>
                             {camper.church || 'General'}
                           </div>
-                          <div className="text-[10px] text-slateSteel dark:text-slateMuted">
-                            {camper.location || 'Local'}
+                          <div className="text-[10px] text-slateSteel dark:text-slateMuted truncate max-w-[170px]" title={`${camper.churchLocation || ''} • ${camper.location || ''}`}>
+                            {camper.churchLocation ? (
+                              <span>
+                                <span className="font-semibold text-slateVoid/80 dark:text-slateFrost/80">{camper.churchLocation}</span>
+                                {camper.location ? ` • ${camper.location}` : ''}
+                              </span>
+                            ) : (
+                              camper.location || 'Local'
+                            )}
                           </div>
                         </td>
 
@@ -820,6 +841,34 @@ export default function AttendeeLookup({
                   <div className="px-3 py-2 rounded-xl bg-slateElevated/15 dark:bg-slateElevated text-xs font-bold text-rose-600 dark:text-rose-400 font-mono">
                     ₹{quickForm.balanceDue || 0}
                   </div>
+                </div>
+              </div>
+
+              {/* Church & Church Location */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
+                    Church / Parish
+                  </label>
+                  <input
+                    type="text"
+                    value={quickForm.church || ''}
+                    onChange={(e) => setQuickForm((p) => ({ ...p, church: e.target.value }))}
+                    placeholder="e.g. IPC Ebenezer"
+                    className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs focus:ring-2 focus:ring-slateSteel"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
+                    Church Location
+                  </label>
+                  <input
+                    type="text"
+                    value={quickForm.churchLocation || ''}
+                    onChange={(e) => setQuickForm((p) => ({ ...p, churchLocation: e.target.value }))}
+                    placeholder="e.g. Kumbanad / Area"
+                    className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs focus:ring-2 focus:ring-slateSteel"
+                  />
                 </div>
               </div>
 

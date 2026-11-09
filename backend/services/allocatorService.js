@@ -103,21 +103,27 @@ function chooseTeam(candidate, teams, options = {}) {
       };
     });
 
-  let available = allTeams.filter((entry) => !entry.full);
-
-  if (available.length === 0) {
-    // If all configured teams have reached target capacity, allocate into least populated team regardless
-    available = allTeams;
-  }
-
-  // Explicit Override: If user requested a specific team (e.g. Group Registration "Keep Together")
+  // Explicit Override: If user requested a specific team (e.g. manual Leader assignment or Keep Together)
   if (options.requestedTeam) {
-    const requested = available.find(
+    const requested = allTeams.find(
       (entry) => entry.team.name.trim().toLowerCase() === options.requestedTeam.trim().toLowerCase()
     );
     if (requested) {
       return requested.team.name.trim();
     }
+  }
+
+  // The "Leader" team is strictly reserved for manual assignment of leaders/volunteers.
+  // Exclude it from automatic 4-tier heuristic parity distribution for regular campers.
+  const regularTeams = allTeams.filter(
+    (entry) => entry.team.name.trim().toLowerCase() !== 'leader'
+  );
+
+  let available = regularTeams.filter((entry) => !entry.full);
+
+  if (available.length === 0) {
+    // If all configured teams reached capacity, allocate into least populated regular team
+    available = regularTeams.length > 0 ? regularTeams : allTeams;
   }
 
   // Base Constraint: Size Parity (Teams must maintain balanced headcount)

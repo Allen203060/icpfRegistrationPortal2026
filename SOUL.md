@@ -68,6 +68,10 @@
   - Implemented streaming PDF generation (`GET /api/export/stats-pdf`) in `pdfService.js` rendering camp-wide executive KPIs, 8-group 4-tier parity breakdown table, age demographics, dorm capacity, and director signature block.
 - [x] **Soft Room Capacity Elasticity & Zero-Rejection Surge Allocation:**
   - Decoupled physical bed capacity ceilings from registration blocking: when all rooms for a gender reach 100% capacity, the allocation engine automatically distributes overflow into the least-occupied matching room.
+- [x] **Church Location, Leader Volunteer Group & Universal Lookup Editing:**
+  - Added `churchLocation` field across `Participant` schema, text indexes, check-in forms, attendee lookup, and participant tables.
+  - Added dedicated `"Leader"` team/group ID (theme color Amber Gold) for manual assignment of leaders, volunteers, and counselors; excluded from the 4-tier heuristic so regular campers are never auto-assigned to Leader.
+  - Expanded `OverrideModal.jsx` in Attendee Lookup to allow editing **all** registration information: Name, Age, Gender, Phone, Church, Church Location, Personal Location, First-Timer status, Staying toggle, Assigned Team (Groups 1–8 and Leader), Gender-segregated Room, Special Notes, and Complete Payment Ledger.
   - Invariant #1 (Absolute Gender Segregation) is strictly maintained; male campers are never placed in female dorms.
   - Eliminated hard 409 rejections in `updateParticipant`, allowing supervisor override assignments and live updates when dorms exceed nominal capacity.
 - [x] **Gender-Segregated Staying vs Day Scholar Analytics:**

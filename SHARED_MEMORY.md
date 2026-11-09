@@ -56,7 +56,8 @@ interface IParticipant {
   age: number;                  // Required, positive integer
   gender: 'Male' | 'Female';    // Required enum
   church?: string;              // Optional, used for dispersion heuristic
-  location?: string;            // Optional, fallback for church
+  churchLocation?: string;      // Optional, church parish location/city
+  location?: string;            // Optional, personal residence location
   staying: boolean;             // Residential (true) vs Day-scholar (false)
   phone?: string;               // Optional contact number
   assignedTeam: string;         // Name of the team (e.g., "Group A"), or empty string if pending payment

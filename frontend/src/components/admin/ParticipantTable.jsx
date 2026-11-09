@@ -20,6 +20,7 @@ export default function ParticipantTable({
         !searchTerm ||
         p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.church?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.churchLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         String(p.serialNo).includes(searchTerm);
 
@@ -122,7 +123,7 @@ export default function ParticipantTable({
                       <span className="text-[10px] font-mono text-zinc-400 dark:text-slateMuted shrink-0">#{p.serialNo}</span>
                     </div>
                     <div className="text-[11px] text-zinc-500 dark:text-slateMuted mt-0.5">
-                      {p.church || '—'} • {p.location || '—'}
+                      {p.church || '—'}{p.churchLocation ? ` (${p.churchLocation})` : ''} • {p.location || '—'}
                     </div>
                     {p.notes && (
                       <div className="text-[11px] text-zinc-400 dark:text-slateMuted italic truncate">Note: {p.notes}</div>
@@ -241,7 +242,16 @@ export default function ParticipantTable({
                     </td>
                     <td className="py-3 px-4 text-zinc-600 dark:text-slateMuted">
                       <div>{p.church || '—'}</div>
-                      <div className="text-[10px] text-zinc-400 dark:text-slateMuted">{p.location || '—'}</div>
+                      <div className="text-[10px] text-zinc-400 dark:text-slateMuted">
+                        {p.churchLocation ? (
+                          <span>
+                            <span className="font-semibold text-zinc-700 dark:text-slate-300">{p.churchLocation}</span>
+                            {p.location ? ` • ${p.location}` : ''}
+                          </span>
+                        ) : (
+                          p.location || '—'
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       {p.assignedTeam ? (

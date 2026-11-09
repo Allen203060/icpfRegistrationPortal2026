@@ -56,6 +56,12 @@ const defaultCampConfig = {
       themeColor: '#A3E635', // Fresh Lime
       targetCapacity: 30,
       description: 'Group 8'
+    },
+    {
+      name: 'Leader',
+      themeColor: '#F59E0B', // Amber Gold
+      targetCapacity: 50,
+      description: 'Event Leaders, Volunteers, and Counselors'
     }
   ],
   rooms: [

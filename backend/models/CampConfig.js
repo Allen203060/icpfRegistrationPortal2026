@@ -153,6 +153,24 @@ campConfigSchema.statics.getActiveConfig = async function () {
     activeConfig = createdConfig.toObject();
   }
 
+  // Ensure "Leader" team exists in active configuration so leaders/volunteers can be assigned
+  const hasLeaderTeam = (activeConfig.teams || []).some(
+    (t) => t.name?.trim().toLowerCase() === 'leader'
+  );
+  if (!hasLeaderTeam) {
+    const leaderTeam = {
+      name: 'Leader',
+      themeColor: '#F59E0B',
+      targetCapacity: 50,
+      description: 'Event Leaders, Volunteers, and Counselors'
+    };
+    await this.updateOne(
+      { _id: activeConfig._id },
+      { $push: { teams: leaderTeam } }
+    );
+    activeConfig.teams = [...(activeConfig.teams || []), leaderTeam];
+  }
+
   return activeConfig;
 };
 
