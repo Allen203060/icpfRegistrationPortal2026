@@ -7,6 +7,7 @@ const participantFields = [
   'name',
   'age',
   'gender',
+  'institution',
   'church',
   'churchLocation',
   'location',
@@ -194,6 +195,7 @@ async function registerParticipant(req, res, next) {
           name: req.body.name.trim(),
           age: ageNum,
           gender: req.body.gender,
+          institution: req.body.institution || '',
           church: req.body.church || '',
           churchLocation: req.body.churchLocation || '',
           location: req.body.location || '',
@@ -317,6 +319,7 @@ async function registerGroup(req, res, next) {
           name: m.name.trim(),
           age,
           gender: m.gender === 'Female' ? 'Female' : 'Male',
+          institution: m.institution || req.body.institution || '',
           church: m.church || church || '',
           churchLocation: m.churchLocation || req.body.churchLocation || '',
           location: m.location || location || '',
@@ -381,7 +384,7 @@ async function registerGroup(req, res, next) {
  */
 async function updateParticipantNotes(req, res, next) {
   try {
-    const { notes, paymentNotes, paymentStatus, amountPaid, balanceDue, balanceToReturn, church, churchLocation, location } = req.body;
+    const { notes, paymentNotes, paymentStatus, amountPaid, balanceDue, balanceToReturn, church, churchLocation, location, institution } = req.body;
     const participant = await Participant.findById(req.params.id);
     if (!participant) {
       throw createHttpError('Participant was not found.', 'PARTICIPANT_NOT_FOUND', 404);
@@ -393,6 +396,7 @@ async function updateParticipantNotes(req, res, next) {
     if (amountPaid !== undefined) participant.amountPaid = Number(amountPaid);
     if (balanceDue !== undefined) participant.balanceDue = Number(balanceDue);
     if (balanceToReturn !== undefined) participant.balanceToReturn = Number(balanceToReturn);
+    if (institution !== undefined) participant.institution = institution.trim();
     if (church !== undefined) participant.church = church.trim();
     if (churchLocation !== undefined) participant.churchLocation = churchLocation.trim();
     if (location !== undefined) participant.location = location.trim();
@@ -426,6 +430,7 @@ async function listParticipants(req, res, next) {
       const pattern = new RegExp(escapeRegExp(String(req.query.search).trim()), 'i');
       filter.$or = [
         { name: pattern },
+        { institution: pattern },
         { church: pattern },
         { churchLocation: pattern },
         { location: pattern },

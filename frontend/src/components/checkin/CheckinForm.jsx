@@ -23,6 +23,7 @@ const INITIAL_SINGLE_FORM = {
   name: '',
   age: '',
   gender: 'Male',
+  institution: '',
   church: '',
   churchLocation: '',
   location: '',
@@ -37,11 +38,12 @@ const INITIAL_SINGLE_FORM = {
   paymentNotes: ''
 };
 
-const createEmptyMember = (defaultChurch = '', defaultChurchLocation = '', defaultLocation = '') => ({
+const createEmptyMember = (defaultChurch = '', defaultChurchLocation = '', defaultLocation = '', defaultInstitution = '') => ({
   name: '',
   age: '',
   gender: 'Male',
   staying: true,
+  institution: defaultInstitution,
   church: defaultChurch,
   churchLocation: defaultChurchLocation,
   location: defaultLocation,
@@ -759,6 +761,21 @@ export default function CheckinForm({ onRegistered, teamConfigs = [] }) {
                   Female (Girls Dorm)
                 </button>
               </div>
+            </div>
+
+            {/* College / School / Others */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
+                College / School / Others (Studying / Studied at)
+              </label>
+              <input
+                type="text"
+                name="institution"
+                value={singleForm.institution}
+                onChange={handleSingleChange}
+                placeholder="e.g. Chandigarh University / Govt Model School / Working"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white/70 dark:bg-slateMidnight/70 text-slateVoid dark:text-slateFrost text-sm focus:bg-white dark:focus:bg-slateMidnight focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all placeholder:text-slateSteel/50 dark:placeholder:text-slateMuted/50"
+              />
             </div>
 
             {/* Church, Church Location & City */}

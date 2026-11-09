@@ -19,6 +19,7 @@ export default function ParticipantTable({
       const matchSearch =
         !searchTerm ||
         p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.institution?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.church?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.churchLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -241,7 +242,14 @@ export default function ParticipantTable({
                       </span>
                     </td>
                     <td className="py-3 px-4 text-zinc-600 dark:text-slateMuted">
-                      <div>{p.church || '—'}</div>
+                      {p.institution && (
+                        <div className="font-semibold text-slateVoid dark:text-slateFrost truncate max-w-[160px]" title={p.institution}>
+                          {p.institution}
+                        </div>
+                      )}
+                      <div className="text-[11px] text-sky-700 dark:text-sky-300 font-medium truncate max-w-[160px]" title={p.church}>
+                        {p.church || 'General'}
+                      </div>
                       <div className="text-[10px] text-zinc-400 dark:text-slateMuted">
                         {p.churchLocation ? (
                           <span>

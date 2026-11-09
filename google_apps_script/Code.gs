@@ -135,6 +135,7 @@ function processRow(sheet, rowNumber) {
     name: name,
     age: age,
     gender: gender,
+    institution: collegeSchool || '',
     church: collegeSchool || 'General', // Used by 4-tier diversity heuristic to disperse peers
     location: location || 'Local',
     staying: staying,

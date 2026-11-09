@@ -68,6 +68,7 @@ export default function AttendeeLookup({
       const matchSearch =
         !query ||
         p.name?.toLowerCase().includes(query) ||
+        p.institution?.toLowerCase().includes(query) ||
         p.church?.toLowerCase().includes(query) ||
         p.churchLocation?.toLowerCase().includes(query) ||
         p.location?.toLowerCase().includes(query) ||
@@ -144,6 +145,7 @@ export default function AttendeeLookup({
     setQuickFeeOption(option);
     setQuickForm({
       notes: camper.notes || '',
+      institution: camper.institution || '',
       church: camper.church || '',
       churchLocation: camper.churchLocation || '',
       paymentStatus: camper.paymentStatus || 'Waiting Payment',
@@ -440,12 +442,22 @@ export default function AttendeeLookup({
                           #{camper.serialNo}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slateSteel dark:text-slateMuted flex items-center gap-1.5 mt-0.5">
-                        <span>
-                          {camper.gender}, {camper.age}y
-                        </span>
-                        <span>• {camper.church || 'General'}{camper.churchLocation ? ` (${camper.churchLocation})` : ''}</span>
-                        {camper.phone && <span>• {camper.phone}</span>}
+                      <div className="text-[11px] text-slateSteel dark:text-slateMuted space-y-0.5 mt-0.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>
+                            {camper.gender}, {camper.age}y
+                          </span>
+                          {camper.phone && <span>• {camper.phone}</span>}
+                        </div>
+                        {camper.institution && (
+                          <div className="text-[11px] text-slateVoid/80 dark:text-slateFrost/80 truncate">
+                            🎓 {camper.institution}
+                          </div>
+                        )}
+                        <div className="text-[11px] text-sky-700 dark:text-sky-300 font-medium truncate">
+                          ⛪ {camper.church || 'General'}{camper.churchLocation ? ` (${camper.churchLocation})` : ''}
+                          {camper.location && <span className="text-slateSteel dark:text-slateMuted font-normal"> • {camper.location}</span>}
+                        </div>
                       </div>
                     </div>
 
@@ -528,7 +540,8 @@ export default function AttendeeLookup({
                     <th className="py-3 px-4">Room Number</th>
                     <th className="py-3 px-4">Payment Status</th>
                     <th className="py-3 px-4">Demographics</th>
-                    <th className="py-3 px-4">Church / Region</th>
+                    <th className="py-3 px-4">College / School / Other</th>
+                    <th className="py-3 px-4">Church Details</th>
                     <th className="py-3 px-4">Notes</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
@@ -644,19 +657,26 @@ export default function AttendeeLookup({
                           </span>
                         </td>
 
-                        {/* Church */}
+                        {/* College / School / Other */}
                         <td className="py-3.5 px-4">
-                          <div className="font-medium text-slateVoid dark:text-slateFrost truncate max-w-[170px]" title={camper.church}>
+                          <div className="font-medium text-slateVoid dark:text-slateFrost truncate max-w-[160px]" title={camper.institution}>
+                            {camper.institution || '—'}
+                          </div>
+                          <div className="text-[10px] text-slateSteel dark:text-slateMuted truncate max-w-[160px]" title={camper.location}>
+                            {camper.location || 'Local'}
+                          </div>
+                        </td>
+
+                        {/* Church Details */}
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-slateVoid dark:text-slateFrost truncate max-w-[170px]" title={camper.church}>
                             {camper.church || 'General'}
                           </div>
-                          <div className="text-[10px] text-slateSteel dark:text-slateMuted truncate max-w-[170px]" title={`${camper.churchLocation || ''} • ${camper.location || ''}`}>
+                          <div className="text-[10px] text-slateSteel dark:text-slateMuted truncate max-w-[170px]" title={camper.churchLocation}>
                             {camper.churchLocation ? (
-                              <span>
-                                <span className="font-semibold text-slateVoid/80 dark:text-slateFrost/80">{camper.churchLocation}</span>
-                                {camper.location ? ` • ${camper.location}` : ''}
-                              </span>
+                              <span className="font-medium text-amber-600 dark:text-amber-400">{camper.churchLocation}</span>
                             ) : (
-                              camper.location || 'Local'
+                              <span className="italic text-slateSteel/60 dark:text-slateMuted/60">—</span>
                             )}
                           </div>
                         </td>
@@ -842,6 +862,20 @@ export default function AttendeeLookup({
                     ₹{quickForm.balanceDue || 0}
                   </div>
                 </div>
+              </div>
+
+              {/* College / School / Other */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slateVoid dark:text-slateFrost block">
+                  College / School / Others (Studying / Studied at)
+                </label>
+                <input
+                  type="text"
+                  value={quickForm.institution || ''}
+                  onChange={(e) => setQuickForm((p) => ({ ...p, institution: e.target.value }))}
+                  placeholder="e.g. Chandigarh University / Govt School"
+                  className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs focus:ring-2 focus:ring-slateSteel"
+                />
               </div>
 
               {/* Church & Church Location */}

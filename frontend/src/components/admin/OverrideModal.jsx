@@ -22,6 +22,7 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('Male');
   const [phone, setPhone] = useState('');
+  const [institution, setInstitution] = useState('');
   const [church, setChurch] = useState('');
   const [churchLocation, setChurchLocation] = useState('');
   const [location, setLocation] = useState('');
@@ -60,6 +61,7 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
     setAge(participant.age !== undefined && participant.age !== null ? String(participant.age) : '');
     setGender(participant.gender || 'Male');
     setPhone(participant.phone || '');
+    setInstitution(participant.institution || '');
     setChurch(participant.church || '');
     setChurchLocation(participant.churchLocation || '');
     setLocation(participant.location || '');
@@ -157,6 +159,7 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
       age: Number(age) || 0,
       gender,
       phone: phone.trim(),
+      institution: institution.trim(),
       church: church.trim(),
       churchLocation: churchLocation.trim(),
       location: location.trim(),
@@ -306,12 +309,25 @@ export default function OverrideModal({ isOpen, participant, campConfig, onClose
             </div>
           </div>
 
-          {/* Section 2: Church & Location Details */}
+          {/* Section 2: College/School & Church Details */}
           <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slateMidnight/60 border border-slateMuted/30 dark:border-slateElevated space-y-3">
             <span className="text-xs font-bold text-slateVoid dark:text-slateFrost flex items-center gap-1.5">
               <Building2 className="w-3.5 h-3.5 text-sky-600" />
-              Church & Residence Details
+              Education, Church & Residence
             </span>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slateSteel dark:text-slateFrost/80 block">
+                College / School / Others (Studying / Studied at)
+              </label>
+              <input
+                type="text"
+                value={institution}
+                onChange={(e) => setInstitution(e.target.value)}
+                placeholder="e.g. Chandigarh University / Govt School / Working"
+                className="w-full px-3 py-2 rounded-xl border border-slateMuted/30 dark:border-slateElevated bg-white dark:bg-slateMidnight text-slateVoid dark:text-slateFrost text-xs font-medium focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div className="space-y-1">
