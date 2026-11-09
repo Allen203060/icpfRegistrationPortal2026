@@ -65,7 +65,10 @@ function request(method, path, body = null) {
 
 async function runApiTests() {
   await startServer(TEST_PORT);
-  await Participant.deleteMany({});
+  // Only clean up specific test names from prior test iterations, never wipe live data
+  await Participant.deleteMany({
+    name: { $in: ['Timothy George', 'Jane Doe', 'Duplicate Church Member', 'Updated Name', 'Batch Member 1', 'Batch Member 2'] }
+  });
 
   let createdParticipantId = null;
 
@@ -175,6 +178,11 @@ async function runApiTests() {
   for (const t of tests) {
     await t();
   }
+
+  // Cleanup test participants created during test run
+  await Participant.deleteMany({
+    name: { $in: ['Timothy George', 'Jane Doe', 'Duplicate Church Member', 'Updated Name', 'Batch Member 1', 'Batch Member 2'] }
+  });
 
   await stopServer();
   const { disconnectDB } = require('../config/db');

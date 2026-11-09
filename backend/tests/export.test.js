@@ -207,8 +207,13 @@ async function runExportTests() {
     await t();
   }
 
-  // Cleanup
-  await Participant.deleteMany({ notes: { $in: ['EXPORT_TEST', ''] } });
+  // Cleanup specifically targeted to test artifacts only (never broad notes matching)
+  await Participant.deleteMany({
+    $or: [
+      { notes: 'EXPORT_TEST' },
+      { name: { $in: ['Batch Imported Boy', 'Batch Imported Girl', 'Export Tester Boy', 'Export Tester Girl'] } }
+    ]
+  });
   await stopServer();
   await disconnectDB();
 
