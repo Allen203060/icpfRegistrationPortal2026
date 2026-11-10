@@ -29,14 +29,15 @@ export async function getActiveCampConfig() {
       year: 2026,
       campTitle: "ICPF Camp 2026",
       teams: [
-        { name: "Group 1", themeColor: "#38BDF8" },
-        { name: "Group 2", themeColor: "#F472B6" },
-        { name: "Group 3", themeColor: "#FACC15" },
-        { name: "Group 4", themeColor: "#A78BFA" },
-        { name: "Group 5", themeColor: "#34D399" },
-        { name: "Group 6", themeColor: "#FB923C" },
-        { name: "Group 7", themeColor: "#2DD4BF" },
-        { name: "Group 8", themeColor: "#A3E635" }
+        { name: "Masterpiece (Group 1)", themeColor: "#38BDF8" },
+        { name: "The Originals (OGs) (Group 2)", themeColor: "#F472B6" },
+        { name: "Signature (Group 3)", themeColor: "#FACC15" },
+        { name: "DNA (Group 4)", themeColor: "#A78BFA" },
+        { name: "Royal (Group 5)", themeColor: "#34D399" },
+        { name: "Aadhar (Group 6)", themeColor: "#FB923C" },
+        { name: "The Icons (Group 7)", themeColor: "#2DD4BF" },
+        { name: "Chosen One (Group 8)", themeColor: "#A3E635" },
+        { name: "Leader", themeColor: "#F59E0B" }
       ],
       rooms: [
         { name: "Male Room 1", gender: "Male", capacity: 10 },

@@ -10,52 +10,52 @@ const defaultCampConfig = {
   active: true,
   teams: [
     {
-      name: 'Group 1',
+      name: 'Masterpiece (Group 1)',
       themeColor: '#38BDF8', // Sky Blue
       targetCapacity: 30,
-      description: 'Group 1'
+      description: 'Masterpiece (Group 1)'
     },
     {
-      name: 'Group 2',
+      name: 'The Originals (OGs) (Group 2)',
       themeColor: '#F472B6', // Rose Pink
       targetCapacity: 30,
-      description: 'Group 2'
+      description: 'The Originals (OGs) (Group 2)'
     },
     {
-      name: 'Group 3',
+      name: 'Signature (Group 3)',
       themeColor: '#FACC15', // Amber Yellow
       targetCapacity: 30,
-      description: 'Group 3'
+      description: 'Signature (Group 3)'
     },
     {
-      name: 'Group 4',
+      name: 'DNA (Group 4)',
       themeColor: '#A78BFA', // Violet
       targetCapacity: 30,
-      description: 'Group 4'
+      description: 'DNA (Group 4)'
     },
     {
-      name: 'Group 5',
+      name: 'Royal (Group 5)',
       themeColor: '#34D399', // Emerald Mint
       targetCapacity: 30,
-      description: 'Group 5'
+      description: 'Royal (Group 5)'
     },
     {
-      name: 'Group 6',
+      name: 'Aadhar (Group 6)',
       themeColor: '#FB923C', // Tangerine Orange
       targetCapacity: 30,
-      description: 'Group 6'
+      description: 'Aadhar (Group 6)'
     },
     {
-      name: 'Group 7',
+      name: 'The Icons (Group 7)',
       themeColor: '#2DD4BF', // Vibrant Teal
       targetCapacity: 30,
-      description: 'Group 7'
+      description: 'The Icons (Group 7)'
     },
     {
-      name: 'Group 8',
+      name: 'Chosen One (Group 8)',
       themeColor: '#A3E635', // Fresh Lime
       targetCapacity: 30,
-      description: 'Group 8'
+      description: 'Chosen One (Group 8)'
     },
     {
       name: 'Leader',
